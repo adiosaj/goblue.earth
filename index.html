@@ -265,6 +265,21 @@
         .loading-line-2 {
             font-size: 1rem;
             opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .loading-fill {
+            height: 100%;
+            background: #fff;
+            transition: width 0.1s ease-out;
         }
 
         /* About Button */
@@ -316,6 +331,10 @@
         <div class="loading-wrap">
             <div class="loading-line-1">Loading your chance</div>
             <div class="loading-line-2">to weave your name into human history...</div>
+            
+            <div class="loading-bar" aria-hidden="true">
+                <div class="loading-fill" id="loadingFill" style="width:0%"></div>
+            </div>
         </div>
     </div>
 
@@ -608,11 +627,37 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            showState('gate');
+            // Start loading animation
+            startLoading();
         });
 
         // Event listeners
         document.addEventListener('keydown', handleKeyPress);
+
+        function startLoading() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loadingFill = document.getElementById('loadingFill');
+            let progress = 0;
+            
+            // Animate loading bar over 9 seconds
+            const loadingInterval = setInterval(() => {
+                progress += 1.11; // 100% / 9 seconds = ~1.11% per frame
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+                    
+                    // Fade out loading screen after bar completes
+                    setTimeout(() => {
+                        loadingScreen.classList.add('fade-out');
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            showState('gate');
+                        }, 1000);
+                    }, 500);
+                }
+                loadingFill.style.width = progress + '%';
+            }, 100); // Update every 100ms for smooth animation
+        }
     </script>
 </body>
 </html>
