@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Blue - Sailing Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Press Start 2P', monospace;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            image-rendering: pixelated;
+        }
+
+        .game-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 0.8em;
+            margin-bottom: 40px;
+            color: #ccc;
+            text-transform: uppercase;
+        }
+
+        .choice-btn {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7em;
+            padding: 12px 20px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .choice-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .choice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ocean {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: #333;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .waves {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 8px,
+                #666 8px,
+                #666 16px
+            );
+            animation: wave 2s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-16px); }
+        }
+
+        .sailboat {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 30px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .sailboat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: #fff;
+        }
+
+        .sailboat::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid #fff;
+        }
+
+        .hull {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 8px;
+            background: #fff;
+        }
+
+        .globe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 2px solid #fff;
+            opacity: 0;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .message {
+            font-size: 0.9em;
+            margin: 20px 0;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-btn {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.6em;
+            padding: 10px 15px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .cta-btn.disabled {
+            border-color: #666;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .cta-btn.disabled:hover {
+            background: transparent;
+            color: #666;
+        }
+
+        .lock-icon {
+            margin-right: 5px;
+        }
+
+        .fade-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .fade-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            color: #fff;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .restart-btn {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.6em;
+            padding: 8px 15px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .restart-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .visible {
+            opacity: 1 !important;
+        }
+
+        /* 8-bit pixelated cursor */
+        * {
+            cursor: crosshair;
+        }
+
+        /* Minimal scrollbar */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="fade-overlay" id="fadeOverlay"></div>
+    <div class="game-over" id="gameOver">
+        GAME OVER
+        <br>
+        <button class="restart-btn" onclick="restartGame()">RESTART</button>
+    </div>
+
+    <div class="ocean" id="ocean">
+        <div class="waves"></div>
+    </div>
+    <div class="sailboat" id="sailboat">
+        <div class="hull"></div>
+    </div>
+    <div class="globe" id="globe"></div>
+
+    <div class="game-container" id="gameContainer">
+        <h1 class="title">GO BLUE</h1>
+        <p class="subtitle">Sailing for the Avocado Framework</p>
+        
+        <div id="choice1" class="choice-screen">
+            <p class="message">The ocean calls. Your destiny awaits.</p>
+            <button class="choice-btn" onclick="makeChoice(1, 'stay')">STAY ON SHORE</button>
+            <button class="choice-btn" onclick="makeChoice(1, 'board')">BOARD THE SHIP</button>
+        </div>
+
+        <div id="choice2" class="choice-screen hidden">
+            <p class="message">You're shaping history.</p>
+            <button class="choice-btn" onclick="makeChoice(2, 'carry')">CARRY THE WORLD</button>
+        </div>
+
+        <div id="choice3" class="choice-screen hidden">
+            <p class="message">Will you carry the world?</p>
+            <button class="choice-btn" onclick="makeChoice(3, 'wrong')">LOOK AWAY</button>
+            <button class="choice-btn" onclick="makeChoice(3, 'right')">CARRY FORWARD</button>
+        </div>
+
+        <div id="final" class="choice-screen hidden">
+            <p class="message">We are only 9. But together, we carry the world. Go Blue.</p>
+            <a href="mailto:contact@goblue.earth?subject=€18k Legacy Ticket" class="cta-btn">€18K LEGACY TICKET</a>
+            <button class="cta-btn disabled">
+                <span class="lock-icon">🔒</span>UNLOCK RAFFLE
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentChoice = 1;
+
+        function makeChoice(choice, decision) {
+            if (choice !== currentChoice) return;
+
+            if (choice === 1) {
+                if (decision === 'stay') {
+                    gameOver();
+                } else if (decision === 'board') {
+                    showOcean();
+                    setTimeout(() => {
+                        showChoice(2);
+                    }, 2000);
+                }
+            } else if (choice === 2) {
+                if (decision === 'carry') {
+                    setTimeout(() => {
+                        showChoice(3);
+                    }, 1000);
+                }
+            } else if (choice === 3) {
+                if (decision === 'wrong') {
+                    fadeToBlack();
+                    setTimeout(() => {
+                        gameOver("You looked away. GAME OVER.");
+                    }, 2000);
+                } else if (decision === 'right') {
+                    showGlobe();
+                    setTimeout(() => {
+                        showFinal();
+                    }, 3000);
+                }
+            }
+        }
+
+        function showChoice(choice) {
+            document.querySelectorAll('.choice-screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById(`choice${choice}`).classList.remove('hidden');
+            currentChoice = choice;
+        }
+
+        function showOcean() {
+            document.getElementById('ocean').style.opacity = '1';
+            document.getElementById('sailboat').style.opacity = '1';
+        }
+
+        function showGlobe() {
+            document.getElementById('globe').style.opacity = '1';
+        }
+
+        function showFinal() {
+            document.querySelectorAll('.choice-screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById('final').classList.remove('hidden');
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.classList.add('visible');
+            });
+        }
+
+        function gameOver(message = "GAME OVER") {
+            document.getElementById('gameOver').innerHTML = message + '<br><button class="restart-btn" onclick="restartGame()">RESTART</button>';
+            document.getElementById('gameOver').classList.add('visible');
+            document.getElementById('fadeOverlay').classList.add('active');
+        }
+
+        function fadeToBlack() {
+            document.getElementById('fadeOverlay').style.background = 'rgba(0, 0, 0, 1)';
+            document.getElementById('fadeOverlay').classList.add('active');
+        }
+
+        function restartGame() {
+            currentChoice = 1;
+            document.getElementById('ocean').style.opacity = '0';
+            document.getElementById('sailboat').style.opacity = '0';
+            document.getElementById('globe').style.opacity = '0';
+            document.getElementById('fadeOverlay').classList.remove('active');
+            document.getElementById('fadeOverlay').style.background = 'rgba(0, 0, 0, 0.8)';
+            document.getElementById('gameOver').classList.remove('visible');
+            
+            document.querySelectorAll('.choice-screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById('choice1').classList.remove('hidden');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.classList.add('visible');
+            });
+        });
+    </script>
+</body>
+</html>
