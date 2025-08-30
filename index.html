@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Go Blue - Sailing Adventure</title>
+    <title>Go Blue - 8-Bit Adventure</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         * {
@@ -21,408 +21,423 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
             image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
 
-        .game-container {
-            text-align: center;
-            max-width: 600px;
-            padding: 20px;
-            position: relative;
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .accessibility {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
             z-index: 10;
         }
 
-        .title {
-            font-size: 2em;
-            margin-bottom: 30px;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .subtitle {
-            font-size: 0.8em;
-            margin-bottom: 40px;
-            color: #ccc;
-            text-transform: uppercase;
-        }
-
-        .choice-btn {
+        .ui-button {
+            position: absolute;
             background: transparent;
-            border: 2px solid #fff;
-            color: #fff;
+            border: none;
+            color: transparent;
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.7em;
-            padding: 12px 20px;
-            margin: 8px;
+            font-size: 12px;
+            padding: 8px 16px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            pointer-events: auto;
+            min-width: 44px;
+            min-height: 44px;
         }
 
-        .choice-btn:hover {
-            background: #fff;
-            color: #000;
-        }
-
-        .choice-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .ocean {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 100px;
-            background: #333;
-            opacity: 0;
-            transition: opacity 1s ease;
-        }
-
-        .waves {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 8px,
-                #666 8px,
-                #666 16px
-            );
-            animation: wave 2s linear infinite;
-        }
-
-        @keyframes wave {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-16px); }
-        }
-
-        .sailboat {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 30px;
-            opacity: 0;
-            transition: opacity 1s ease;
-        }
-
-        .sailboat::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 20px;
-            background: #fff;
-        }
-
-        .sailboat::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 12px solid #fff;
-        }
-
-        .hull {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 16px;
-            height: 8px;
-            background: #fff;
-        }
-
-        .globe {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            border: 2px solid #fff;
-            opacity: 0;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        .message {
-            font-size: 0.9em;
-            margin: 20px 0;
-            color: #fff;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .cta-btn {
-            background: transparent;
-            border: 2px solid #fff;
-            color: #fff;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.6em;
-            padding: 10px 15px;
-            margin: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .cta-btn:hover {
-            background: #fff;
-            color: #000;
-        }
-
-        .cta-btn.disabled {
-            border-color: #666;
-            color: #666;
-            cursor: not-allowed;
-        }
-
-        .cta-btn.disabled:hover {
-            background: transparent;
-            color: #666;
-        }
-
-        .lock-icon {
-            margin-right: 5px;
-        }
-
-        .fade-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .fade-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2em;
-            color: #fff;
-            z-index: 15;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-align: center;
-        }
-
-        .restart-btn {
-            background: transparent;
-            border: 2px solid #fff;
-            color: #fff;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.6em;
-            padding: 8px 15px;
-            margin-top: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-        }
-
-        .restart-btn:hover {
-            background: #fff;
-            color: #000;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .visible {
-            opacity: 1 !important;
-        }
-
-        /* 8-bit pixelated cursor */
-        * {
-            cursor: crosshair;
-        }
-
-        /* Minimal scrollbar */
-        ::-webkit-scrollbar {
-            display: none;
+        .ui-button:focus {
+            outline: 2px solid #fff;
         }
     </style>
 </head>
 <body>
-    <div class="fade-overlay" id="fadeOverlay"></div>
-    <div class="game-over" id="gameOver">
-        GAME OVER
-        <br>
-        <button class="restart-btn" onclick="restartGame()">RESTART</button>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="ui-overlay">
+        <button class="ui-button" id="yesBtn" style="display: none;">YES</button>
+        <button class="ui-button" id="noBtn" style="display: none;">NO</button>
+        <button class="ui-button" id="restartBtn" style="display: none;">RESTART</button>
+        <button class="ui-button" id="legacyBtn" style="display: none;">LEGACY</button>
+        <button class="ui-button" id="raffleBtn" style="display: none;">RAFFLE</button>
     </div>
 
-    <div class="ocean" id="ocean">
-        <div class="waves"></div>
-    </div>
-    <div class="sailboat" id="sailboat">
-        <div class="hull"></div>
-    </div>
-    <div class="globe" id="globe"></div>
-
-    <div class="game-container" id="gameContainer">
-        <h1 class="title">GO BLUE</h1>
-        <p class="subtitle">Sailing for the Avocado Framework</p>
-        
-        <div id="choice1" class="choice-screen">
-            <p class="message">The ocean calls. Your destiny awaits.</p>
-            <button class="choice-btn" onclick="makeChoice(1, 'stay')">STAY ON SHORE</button>
-            <button class="choice-btn" onclick="makeChoice(1, 'board')">BOARD THE SHIP</button>
-        </div>
-
-        <div id="choice2" class="choice-screen hidden">
-            <p class="message">You're shaping history.</p>
-            <button class="choice-btn" onclick="makeChoice(2, 'carry')">CARRY THE WORLD</button>
-        </div>
-
-        <div id="choice3" class="choice-screen hidden">
-            <p class="message">Will you carry the world?</p>
-            <button class="choice-btn" onclick="makeChoice(3, 'wrong')">LOOK AWAY</button>
-            <button class="choice-btn" onclick="makeChoice(3, 'right')">CARRY FORWARD</button>
-        </div>
-
-        <div id="final" class="choice-screen hidden">
-            <p class="message">We are only 9. But together, we carry the world. Go Blue.</p>
-            <a href="mailto:contact@goblue.earth?subject=€18k Legacy Ticket" class="cta-btn">€18K LEGACY TICKET</a>
-            <button class="cta-btn disabled">
-                <span class="lock-icon">🔒</span>UNLOCK RAFFLE
-            </button>
-        </div>
-    </div>
+    <div class="accessibility" aria-live="polite" id="screenReader"></div>
 
     <script>
-        let currentChoice = 1;
+        // Game constants
+        const BASE_WIDTH = 256;
+        const BASE_HEIGHT = 240;
+        const PALETTE = {
+            BLACK: '#000000',
+            CYAN: '#0ABDC6',
+            GRAY: '#B7C0C7',
+            WHITE: '#FFFFFF'
+        };
 
-        function makeChoice(choice, decision) {
-            if (choice !== currentChoice) return;
+        // Game state
+        let gameState = 'intro';
+        let frameCount = 0;
+        let waveOffset = 0;
+        let boatOffset = 0;
+        let globeRotation = 0;
+        let fadeAlpha = 0;
+        let fadeTarget = 0;
+        let fadeSpeed = 0.02;
 
-            if (choice === 1) {
-                if (decision === 'stay') {
-                    gameOver();
-                } else if (decision === 'board') {
-                    showOcean();
-                    setTimeout(() => {
-                        showChoice(2);
-                    }, 2000);
-                }
-            } else if (choice === 2) {
-                if (decision === 'carry') {
-                    setTimeout(() => {
-                        showChoice(3);
-                    }, 1000);
-                }
-            } else if (choice === 3) {
-                if (decision === 'wrong') {
-                    fadeToBlack();
-                    setTimeout(() => {
-                        gameOver("You looked away. GAME OVER.");
-                    }, 2000);
-                } else if (decision === 'right') {
-                    showGlobe();
-                    setTimeout(() => {
-                        showFinal();
-                    }, 3000);
-                }
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let scale = 1;
+
+        // Initialize canvas
+        function initCanvas() {
+            const maxScale = Math.min(
+                Math.floor(window.innerWidth / BASE_WIDTH),
+                Math.floor(window.innerHeight / BASE_HEIGHT)
+            );
+            scale = Math.max(2, Math.min(maxScale, 4));
+            
+            canvas.width = BASE_WIDTH * scale;
+            canvas.height = BASE_HEIGHT * scale;
+            canvas.style.width = BASE_WIDTH * scale + 'px';
+            canvas.style.height = BASE_HEIGHT * scale + 'px';
+            
+            ctx.imageSmoothingEnabled = false;
+            ctx.mozImageSmoothingEnabled = false;
+            ctx.webkitImageSmoothingEnabled = false;
+            ctx.msImageSmoothingEnabled = false;
+        }
+
+        // Pixel-perfect drawing functions
+        function drawPixel(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * scale, y * scale, scale, scale);
+        }
+
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * scale, y * scale, w * scale, h * scale);
+        }
+
+        function drawText(text, x, y, size = 'small', color = PALETTE.WHITE) {
+            ctx.fillStyle = color;
+            ctx.font = (size === 'large' ? 16 : 8) * scale + 'px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            
+            // Snap to integer pixels
+            const snapX = Math.round(x * scale);
+            const snapY = Math.round(y * scale);
+            
+            ctx.fillText(text, snapX, snapY);
+        }
+
+        // Drawing functions
+        function drawWaves() {
+            const waveHeight = 4;
+            const waveSpeed = 0.5;
+            
+            for (let x = 0; x < BASE_WIDTH; x += 2) {
+                const wave1 = Math.sin((x + waveOffset) * 0.02) * waveHeight;
+                const wave2 = Math.sin((x + waveOffset * 0.7) * 0.03) * (waveHeight * 0.5);
+                const y = BASE_HEIGHT - 20 + wave1 + wave2;
+                
+                drawPixel(x, Math.floor(y), PALETTE.CYAN);
+                drawPixel(x + 1, Math.floor(y), PALETTE.CYAN);
+            }
+            
+            waveOffset += waveSpeed;
+        }
+
+        function drawBoat() {
+            const boatX = 128;
+            const boatY = BASE_HEIGHT - 40 + Math.sin(boatOffset * 0.1) * 1;
+            
+            // Boat hull (8x6 pixels)
+            drawRect(boatX - 4, boatY, 8, 2, PALETTE.GRAY);
+            drawRect(boatX - 3, boatY - 1, 6, 1, PALETTE.GRAY);
+            
+            // Mast
+            drawRect(boatX - 1, boatY - 8, 2, 8, PALETTE.WHITE);
+            
+            // Sail
+            drawRect(boatX + 1, boatY - 7, 4, 6, PALETTE.WHITE);
+            drawPixel(boatX + 1, boatY - 7, PALETTE.CYAN);
+            drawPixel(boatX + 2, boatY - 6, PALETTE.CYAN);
+            
+            boatOffset++;
+        }
+
+        function drawGlobe() {
+            const centerX = BASE_WIDTH / 2;
+            const centerY = BASE_HEIGHT / 2;
+            const radius = 20;
+            
+            // Draw globe outline
+            for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+                const x = centerX + Math.cos(angle + globeRotation) * radius;
+                const y = centerY + Math.sin(angle + globeRotation) * radius;
+                drawPixel(Math.floor(x), Math.floor(y), PALETTE.WHITE);
+            }
+            
+            // Draw continents (simplified)
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + globeRotation;
+                const x = centerX + Math.cos(angle) * (radius * 0.7);
+                const y = centerY + Math.sin(angle) * (radius * 0.7);
+                drawPixel(Math.floor(x), Math.floor(y), PALETTE.CYAN);
+            }
+            
+            globeRotation += 0.02;
+        }
+
+        function drawUI() {
+            if (gameState === 'intro') {
+                drawText('THE OCEAN AWAITS.', BASE_WIDTH / 2, 80, 'large');
+                drawText('WILL YOU BOARD?', BASE_WIDTH / 2, 120, 'small');
+                
+                // Draw buttons
+                drawRect(60, 160, 40, 20, PALETTE.WHITE);
+                drawText('Y', 80, 165, 'small', PALETTE.BLACK);
+                
+                drawRect(156, 160, 40, 20, PALETTE.WHITE);
+                drawText('N', 176, 165, 'small', PALETTE.BLACK);
+                
+            } else if (gameState === 'mid') {
+                drawText('WILL YOU FACE THE DEEP?', BASE_WIDTH / 2, 120, 'small');
+                
+                drawRect(60, 160, 40, 20, PALETTE.WHITE);
+                drawText('Y', 80, 165, 'small', PALETTE.BLACK);
+                
+                drawRect(156, 160, 40, 20, PALETTE.WHITE);
+                drawText('N', 176, 165, 'small', PALETTE.BLACK);
+                
+            } else if (gameState === 'final') {
+                drawText('WILL YOU CARRY THE WORLD?', BASE_WIDTH / 2, 80, 'small');
+                
+                drawRect(60, 160, 40, 20, PALETTE.WHITE);
+                drawText('Y', 80, 165, 'small', PALETTE.BLACK);
+                
+                drawRect(156, 160, 40, 20, PALETTE.WHITE);
+                drawText('N', 176, 165, 'small', PALETTE.BLACK);
+                
+            } else if (gameState === 'success') {
+                drawText('WE ARE ONLY 9.', BASE_WIDTH / 2, 60, 'large');
+                drawText('TOGETHER, WE MOVE.', BASE_WIDTH / 2, 90, 'large');
+                
+                // Legacy button
+                drawRect(40, 140, 80, 20, PALETTE.WHITE);
+                drawText('LEGACY', 80, 145, 'small', PALETTE.BLACK);
+                
+                // Raffle button (disabled)
+                drawRect(136, 140, 80, 20, PALETTE.GRAY);
+                drawText('RAFFLE', 176, 145, 'small', PALETTE.BLACK);
+                
+                // Lock icon
+                drawRect(200, 145, 4, 6, PALETTE.BLACK);
+                drawRect(199, 147, 6, 2, PALETTE.BLACK);
+                
+            } else if (gameState === 'gameover') {
+                drawText('GAME OVER', BASE_WIDTH / 2, 100, 'large');
+                
+                drawRect(88, 160, 80, 20, PALETTE.WHITE);
+                drawText('RESTART', 128, 165, 'small', PALETTE.BLACK);
             }
         }
 
-        function showChoice(choice) {
-            document.querySelectorAll('.choice-screen').forEach(screen => {
-                screen.classList.add('hidden');
-            });
-            document.getElementById(`choice${choice}`).classList.remove('hidden');
-            currentChoice = choice;
+        function drawFade() {
+            if (fadeAlpha > 0) {
+                drawRect(0, 0, BASE_WIDTH, BASE_HEIGHT, `rgba(0,0,0,${fadeAlpha})`);
+            }
         }
 
-        function showOcean() {
-            document.getElementById('ocean').style.opacity = '1';
-            document.getElementById('sailboat').style.opacity = '1';
+        function updateFade() {
+            if (fadeAlpha < fadeTarget) {
+                fadeAlpha = Math.min(fadeAlpha + fadeSpeed, fadeTarget);
+            } else if (fadeAlpha > fadeTarget) {
+                fadeAlpha = Math.max(fadeAlpha - fadeSpeed, fadeTarget);
+            }
         }
 
-        function showGlobe() {
-            document.getElementById('globe').style.opacity = '1';
-        }
-
-        function showFinal() {
-            document.querySelectorAll('.choice-screen').forEach(screen => {
-                screen.classList.add('hidden');
-            });
-            document.getElementById('final').classList.remove('hidden');
-            document.querySelectorAll('.message').forEach(msg => {
-                msg.classList.add('visible');
-            });
-        }
-
-        function gameOver(message = "GAME OVER") {
-            document.getElementById('gameOver').innerHTML = message + '<br><button class="restart-btn" onclick="restartGame()">RESTART</button>';
-            document.getElementById('gameOver').classList.add('visible');
-            document.getElementById('fadeOverlay').classList.add('active');
-        }
-
-        function fadeToBlack() {
-            document.getElementById('fadeOverlay').style.background = 'rgba(0, 0, 0, 1)';
-            document.getElementById('fadeOverlay').classList.add('active');
-        }
-
-        function restartGame() {
-            currentChoice = 1;
-            document.getElementById('ocean').style.opacity = '0';
-            document.getElementById('sailboat').style.opacity = '0';
-            document.getElementById('globe').style.opacity = '0';
-            document.getElementById('fadeOverlay').classList.remove('active');
-            document.getElementById('fadeOverlay').style.background = 'rgba(0, 0, 0, 0.8)';
-            document.getElementById('gameOver').classList.remove('visible');
+        // Game logic
+        function handleChoice(choice) {
+            if (gameState === 'intro') {
+                if (choice === 'no') {
+                    gameState = 'gameover';
+                    updateScreenReader('You stayed behind. GAME OVER.');
+                    fadeTarget = 0.8;
+                } else {
+                    gameState = 'mid';
+                    updateScreenReader('You board.');
+                }
+            } else if (gameState === 'mid') {
+                if (choice === 'no') {
+                    gameState = 'gameover';
+                    updateScreenReader('You looked away. GAME OVER.');
+                    fadeTarget = 1;
+                } else {
+                    gameState = 'final';
+                    updateScreenReader('Will you carry the world?');
+                }
+            } else if (gameState === 'final') {
+                if (choice === 'no') {
+                    gameState = 'gameover';
+                    updateScreenReader('You looked away. GAME OVER.');
+                    fadeTarget = 1;
+                } else {
+                    gameState = 'success';
+                    updateScreenReader('We are only 9. Together, we move.');
+                }
+            }
             
-            document.querySelectorAll('.choice-screen').forEach(screen => {
-                screen.classList.add('hidden');
-            });
-            document.getElementById('choice1').classList.remove('hidden');
+            updateUI();
+        }
+
+        function restart() {
+            gameState = 'intro';
+            fadeAlpha = 0;
+            fadeTarget = 0;
+            waveOffset = 0;
+            boatOffset = 0;
+            globeRotation = 0;
+            updateScreenReader('The Ocean Awaits. Will you board?');
+            updateUI();
+        }
+
+        function updateUI() {
+            const yesBtn = document.getElementById('yesBtn');
+            const noBtn = document.getElementById('noBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            const legacyBtn = document.getElementById('legacyBtn');
+            const raffleBtn = document.getElementById('raffleBtn');
+            
+            yesBtn.style.display = 'none';
+            noBtn.style.display = 'none';
+            restartBtn.style.display = 'none';
+            legacyBtn.style.display = 'none';
+            raffleBtn.style.display = 'none';
+            
+            if (gameState === 'intro' || gameState === 'mid' || gameState === 'final') {
+                yesBtn.style.display = 'block';
+                noBtn.style.display = 'block';
+                yesBtn.style.left = (60 * scale) + 'px';
+                yesBtn.style.top = (160 * scale) + 'px';
+                yesBtn.style.width = (40 * scale) + 'px';
+                yesBtn.style.height = (20 * scale) + 'px';
+                noBtn.style.left = (156 * scale) + 'px';
+                noBtn.style.top = (160 * scale) + 'px';
+                noBtn.style.width = (40 * scale) + 'px';
+                noBtn.style.height = (20 * scale) + 'px';
+            } else if (gameState === 'success') {
+                legacyBtn.style.display = 'block';
+                legacyBtn.style.left = (40 * scale) + 'px';
+                legacyBtn.style.top = (140 * scale) + 'px';
+                legacyBtn.style.width = (80 * scale) + 'px';
+                legacyBtn.style.height = (20 * scale) + 'px';
+            } else if (gameState === 'gameover') {
+                restartBtn.style.display = 'block';
+                restartBtn.style.left = (88 * scale) + 'px';
+                restartBtn.style.top = (160 * scale) + 'px';
+                restartBtn.style.width = (80 * scale) + 'px';
+                restartBtn.style.height = (20 * scale) + 'px';
+            }
+        }
+
+        function updateScreenReader(text) {
+            document.getElementById('screenReader').textContent = text;
+        }
+
+        // Event handlers
+        function handleKeyPress(e) {
+            const key = e.key.toLowerCase();
+            
+            if (key === 'y' && (gameState === 'intro' || gameState === 'mid' || gameState === 'final')) {
+                handleChoice('yes');
+            } else if (key === 'n' && (gameState === 'intro' || gameState === 'mid' || gameState === 'final')) {
+                handleChoice('no');
+            } else if (key === 'r' && gameState === 'gameover') {
+                restart();
+            }
+        }
+
+        // Button event handlers
+        document.getElementById('yesBtn').addEventListener('click', () => handleChoice('yes'));
+        document.getElementById('noBtn').addEventListener('click', () => handleChoice('no'));
+        document.getElementById('restartBtn').addEventListener('click', restart);
+        document.getElementById('legacyBtn').addEventListener('click', () => {
+            window.location.href = 'mailto:team@goblue.earth?subject=Legacy Ticket';
+        });
+        document.getElementById('raffleBtn').addEventListener('click', () => {
+            // Do nothing - disabled
+        });
+
+        // Main render loop
+        function render() {
+            // Clear canvas
+            drawRect(0, 0, BASE_WIDTH, BASE_HEIGHT, PALETTE.BLACK);
+            
+            // Draw background elements
+            if (gameState !== 'intro' && gameState !== 'gameover') {
+                drawWaves();
+            }
+            
+            if (gameState === 'success') {
+                drawGlobe();
+                drawBoat();
+            }
+            
+            // Draw UI
+            drawUI();
+            
+            // Draw fade overlay
+            drawFade();
+            
+            frameCount++;
+        }
+
+        function gameLoop() {
+            updateFade();
+            render();
+            requestAnimationFrame(gameLoop);
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.message').forEach(msg => {
-                msg.classList.add('visible');
-            });
+        function init() {
+            initCanvas();
+            updateScreenReader('The Ocean Awaits. Will you board?');
+            updateUI();
+            gameLoop();
+        }
+
+        // Event listeners
+        window.addEventListener('keydown', handleKeyPress);
+        window.addEventListener('resize', () => {
+            initCanvas();
+            updateUI();
         });
+
+        // Start the game
+        init();
     </script>
 </body>
 </html>
