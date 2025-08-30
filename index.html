@@ -145,11 +145,14 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             
-            // Snap to integer pixels
+            // Snap to integer pixels and add padding to prevent clipping
             const snapX = Math.round(x * scale);
             const snapY = Math.round(y * scale);
             
-            ctx.fillText(text, snapX, snapY);
+            // Add small padding to ensure text doesn't get clipped
+            const padding = 2 * scale;
+            
+            ctx.fillText(text, snapX, snapY + padding);
         }
 
         // Drawing functions
@@ -213,8 +216,8 @@
 
         function drawUI() {
             if (gameState === 'intro') {
-                drawText('THE OCEAN AWAITS.', BASE_WIDTH / 2, 80, 'large');
-                drawText('WILL YOU BOARD?', BASE_WIDTH / 2, 120, 'small');
+                drawText('THE OCEAN AWAITS.', BASE_WIDTH / 2, 70, 'large');
+                drawText('WILL YOU BOARD?', BASE_WIDTH / 2, 110, 'small');
                 
                 // Draw buttons
                 drawRect(60, 160, 40, 20, PALETTE.WHITE);
@@ -224,7 +227,7 @@
                 drawText('N', 176, 165, 'small', PALETTE.BLACK);
                 
             } else if (gameState === 'mid') {
-                drawText('WILL YOU FACE THE DEEP?', BASE_WIDTH / 2, 120, 'small');
+                drawText('WILL YOU FACE THE DEEP?', BASE_WIDTH / 2, 110, 'small');
                 
                 drawRect(60, 160, 40, 20, PALETTE.WHITE);
                 drawText('Y', 80, 165, 'small', PALETTE.BLACK);
@@ -233,7 +236,7 @@
                 drawText('N', 176, 165, 'small', PALETTE.BLACK);
                 
             } else if (gameState === 'final') {
-                drawText('WILL YOU CARRY THE WORLD?', BASE_WIDTH / 2, 80, 'small');
+                drawText('WILL YOU CARRY THE WORLD?', BASE_WIDTH / 2, 70, 'small');
                 
                 drawRect(60, 160, 40, 20, PALETTE.WHITE);
                 drawText('Y', 80, 165, 'small', PALETTE.BLACK);
@@ -242,8 +245,8 @@
                 drawText('N', 176, 165, 'small', PALETTE.BLACK);
                 
             } else if (gameState === 'success') {
-                drawText('WE ARE ONLY 9.', BASE_WIDTH / 2, 60, 'large');
-                drawText('TOGETHER, WE MOVE.', BASE_WIDTH / 2, 90, 'large');
+                drawText('WE ARE ONLY 9.', BASE_WIDTH / 2, 50, 'large');
+                drawText('TOGETHER, WE MOVE.', BASE_WIDTH / 2, 80, 'large');
                 
                 // Legacy button
                 drawRect(40, 140, 80, 20, PALETTE.WHITE);
@@ -258,7 +261,7 @@
                 drawRect(199, 147, 6, 2, PALETTE.BLACK);
                 
             } else if (gameState === 'gameover') {
-                drawText('GAME OVER', BASE_WIDTH / 2, 100, 'large');
+                drawText('GAME OVER', BASE_WIDTH / 2, 90, 'large');
                 
                 drawRect(88, 160, 80, 20, PALETTE.WHITE);
                 drawText('RESTART', 128, 165, 'small', PALETTE.BLACK);
