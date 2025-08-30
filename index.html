@@ -470,28 +470,25 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             // Hide the Continue button
             continueBtn.style.display = 'none';
             
-            // Create iframe with Formspree form
-            const formUrl = 'https://formspree.io/f/mrbapwyv';
-            const iframe = document.createElement('iframe');
-            iframe.src = formUrl;
-            iframe.style.width = '100%';
-            iframe.style.height = '400px';
-            iframe.style.border = '1px solid #fff';
-            iframe.style.background = 'transparent';
-            iframe.style.marginTop = '1rem';
+            // Create form with proper styling
+            const formHTML = `
+                <form action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;">
+                    <label style="display: block; margin-bottom: 1rem; color: #fff;">
+                        Your email:
+                        <input type="email" name="email" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-top: 0.5rem;">
+                    </label>
+                    <label style="display: block; margin-bottom: 1rem; color: #fff;">
+                        Your message:
+                        <textarea name="message" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-top: 0.5rem; min-height: 100px; resize: vertical;">${action === 'claim' ? 'Legacy Seat Request (€18,000)' : 'Gift Seat Request'}</textarea>
+                    </label>
+                    <input type="hidden" name="action" value="${action}">
+                    <button type="submit" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer; margin-right: 1rem;">Send</button>
+                    <button type="button" onclick="closeDisclaimer()" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer;">Close</button>
+                </form>
+            `;
             
-            // Create close button
-            const closeBtn = document.createElement('button');
-            closeBtn.textContent = 'Close';
-            closeBtn.className = 'modal-button secondary';
-            closeBtn.type = 'button';
-            closeBtn.onclick = closeDisclaimer;
-            closeBtn.style.marginTop = '1rem';
-            
-            // Clear modal content and add iframe and close button
-            disclaimerText.innerHTML = '';
-            disclaimerText.appendChild(iframe);
-            disclaimerText.appendChild(closeBtn);
+            // Clear modal content and add form
+            disclaimerText.innerHTML = formHTML;
             
             modal.classList.add('visible');
         }
