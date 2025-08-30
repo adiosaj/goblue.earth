@@ -319,11 +319,11 @@
                          <div class="modal-text" id="disclaimerText">
 The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
 
-Operating under the fiscal sponsorship of Norsk klimanettverk (registered in Norway).
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
 
 For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
 
-GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the award of the prize.
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
 
 By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.</div>
             <div class="modal-buttons">
@@ -442,13 +442,12 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             const continueBtn = document.getElementById('continueBtn');
             
             if (action === 'claim') {
-                disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="claim"><input type="hidden" name="message" value="Legacy Seat Request (€18,000)"><br><br>We will contact you to coordinate your Legacy Seat (€18,000) and transfer method (wire/crypto).';
+                disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="claim"><input type="hidden" name="message" value="Legacy Seat Request (€18,000)"><br><br>We will contact you to coordinate your Legacy Seat (€18,000) and transfer method (wire/crypto).<br><br><button type="submit" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer; margin-right: 1rem;">Submit</button></form>';
             } else if (action === 'gift') {
-                disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="gift"><input type="hidden" name="message" value="Gift Seat Request"><br><br>We will contact you to coordinate gifting a seat and transfer method (wire/crypto).';
+                disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="gift"><input type="hidden" name="message" value="Gift Seat Request"><br><br>We will contact you to coordinate gifting a seat and transfer method (wire/crypto).<br><br><button type="submit" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer; margin-right: 1rem;">Submit</button></form>';
             }
             
-            continueBtn.textContent = 'Submit';
-            continueBtn.onclick = submitEmail;
+            continueBtn.style.display = 'none';
             
             modal.classList.add('visible');
             
@@ -456,9 +455,17 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             setTimeout(() => {
                 document.getElementById('userEmail').focus();
             }, 100);
+            
+            // Add form submit handler
+            const form = document.getElementById('emailForm');
+            if (form) {
+                form.addEventListener('submit', handleFormSubmit);
+            }
         }
 
-        function submitEmail() {
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
             const email = document.getElementById('userEmail').value.trim();
             if (!email || !isValidEmail(email)) {
                 alert('Please enter a valid email address.');
@@ -468,18 +475,41 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             // Submit the form to Formspree
             const form = document.getElementById('emailForm');
             if (form) {
-                form.submit();
+                // Create a new form submission
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        showConfirmation(email);
+                    } else {
+                        alert('There was an error submitting your email. Please try again.');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error submitting your email. Please try again.');
+                });
             }
-            
-            // Show confirmation
+        }
+
+        function showConfirmation(email) {
             const modal = document.getElementById('disclaimerModal');
             const disclaimerText = document.getElementById('disclaimerText');
             const continueBtn = document.getElementById('continueBtn');
             
             disclaimerText.innerHTML = 'Thank you. We will contact you at:<br><br><strong>' + email + '</strong><br><br>within 24 hours to coordinate your request.';
             
+            continueBtn.style.display = 'inline-block';
             continueBtn.textContent = 'Close';
             continueBtn.onclick = closeDisclaimer;
+        }
+
+        function submitEmail() {
+            // This function is no longer needed as we're using the form's submit button
         }
 
         function isValidEmail(email) {
