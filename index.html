@@ -319,11 +319,11 @@
                          <div class="modal-text" id="disclaimerText">
 The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
 
-Operating in collaboration with Norsk klimanettverk (registered in Norway).
+Operating under the fiscal sponsorship of Norsk klimanettverk (registered in Norway).
 
 For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
 
-GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the award of the prize.
 
 By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.</div>
             <div class="modal-buttons">
@@ -442,9 +442,9 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             const continueBtn = document.getElementById('continueBtn');
             
             if (action === 'claim') {
-                disclaimerText.innerHTML = 'Please provide your email address:<br><br><input type="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><br><br>We will contact you to coordinate your Legacy Seat (€18,000) and transfer method (wire/crypto).';
+                disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="claim"><input type="hidden" name="message" value="Legacy Seat Request (€18,000)"><br><br>We will contact you to coordinate your Legacy Seat (€18,000) and transfer method (wire/crypto).';
             } else if (action === 'gift') {
-                disclaimerText.innerHTML = 'Please provide your email address:<br><br><input type="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><br><br>We will contact you to coordinate gifting a seat and transfer method (wire/crypto).';
+                disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="gift"><input type="hidden" name="message" value="Gift Seat Request"><br><br>We will contact you to coordinate gifting a seat and transfer method (wire/crypto).';
             }
             
             continueBtn.textContent = 'Submit';
@@ -465,8 +465,13 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
                 return;
             }
             
-            // Here you would typically send the email to your server
-            // For now, we'll just show a confirmation
+            // Submit the form to Formspree
+            const form = document.getElementById('emailForm');
+            if (form) {
+                form.submit();
+            }
+            
+            // Show confirmation
             const modal = document.getElementById('disclaimerModal');
             const disclaimerText = document.getElementById('disclaimerText');
             const continueBtn = document.getElementById('continueBtn');
