@@ -131,11 +131,105 @@
             box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
         }
 
+        .amount-text {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-top: 1rem;
+            font-weight: 300;
+        }
+
         .subline {
             font-size: 0.8rem;
             color: #666;
             margin-top: 2rem;
             font-weight: 300;
+        }
+
+        .raffle-note {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        .final-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .final-button.disabled:hover {
+            background: transparent;
+            color: #fff;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #000;
+            border: 1px solid #fff;
+            padding: 2rem;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .modal-text {
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            white-space: pre-line;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-button {
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .modal-button.secondary {
+            border-color: #666;
+            color: #666;
+        }
+
+        .modal-button.secondary:hover {
+            background: #666;
+            color: #000;
         }
 
         .hidden {
@@ -199,12 +293,14 @@
         <div class="text-content">
             <div class="final-text">Legacy is not money.</div>
             <div class="final-text">It is motion.</div>
+            <div class="amount-text">Contribution per legacy seat: €18,000</div>
         </div>
         <div class="final-buttons">
-            <a href="mailto:concierge@goblue.earth?subject=Legacy Ticket — goblue.earth" class="final-button">Claim Legacy Seat (€18k)</a>
-            <a href="mailto:concierge@goblue.earth?subject=Private Seat — goblue.earth&body=Request: discretion" class="final-button">Private Seat (Concierge)</a>
-            <a href="mailto:concierge@goblue.earth?subject=Gift a Seat — goblue.earth&body=Recipient (optional): ____" class="final-button">Gift a Seat</a>
+            <button class="final-button" onclick="showDisclaimer('claim')">Claim Legacy Seat (€18k)</button>
+            <button class="final-button" onclick="showDisclaimer('gift')">Gift a Seat</button>
+            <button class="final-button disabled" id="raffleBtn" onclick="handleRaffle()">Raffle (€1.80) — Locked</button>
         </div>
+        <div id="raffleNote" class="raffle-note">Unlocks after the first Legacy Seat is claimed.</div>
         <div class="subline">Only three.<br>Eight days remain.</div>
     </div>
 
@@ -217,7 +313,29 @@
         </div>
     </div>
 
+    <!-- Disclaimer Modal -->
+    <div class="modal-overlay" id="disclaimerModal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+                         <div class="modal-text" id="disclaimerText">
+The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
+
+For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
+
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+
+By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.</div>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" onclick="closeDisclaimer()">Close</button>
+                <button class="modal-button" id="continueBtn" onclick="continueAction()">Continue</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let angelSold = false; // set true when first legacy seat is sold; unlocks raffle
+        let currentAction = '';
         let currentState = 'gate';
         const gameOverMessages = {
             'gate': 'You stayed behind.<br>Game Over.',
@@ -274,6 +392,125 @@
             showState(currentState);
         }
 
+        function showDisclaimer(action) {
+            currentAction = action;
+            const modal = document.getElementById('disclaimerModal');
+            modal.classList.add('visible');
+            
+            // Trap focus in modal
+            const continueBtn = document.getElementById('continueBtn');
+            continueBtn.focus();
+        }
+
+        function closeDisclaimer() {
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+                         // Reset modal content to original disclaimer
+             disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
+
+For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
+
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+
+By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.`;
+            
+            continueBtn.textContent = 'Continue';
+            continueBtn.onclick = continueAction;
+            continueBtn.classList.remove('secondary');
+            continueBtn.disabled = false;
+            
+            modal.classList.remove('visible');
+            currentAction = '';
+        }
+
+        function continueAction() {
+            if (currentAction === 'claim') {
+                showEmailInfo('claim');
+            } else if (currentAction === 'gift') {
+                showEmailInfo('gift');
+            }
+            closeDisclaimer();
+        }
+
+        function showEmailInfo(action) {
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            if (action === 'claim') {
+                disclaimerText.innerHTML = 'Please provide your email address:<br><br><input type="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><br><br>We will contact you to coordinate your Legacy Seat (€18,000) and transfer method (wire/crypto).';
+            } else if (action === 'gift') {
+                disclaimerText.innerHTML = 'Please provide your email address:<br><br><input type="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><br><br>We will contact you to coordinate gifting a seat and transfer method (wire/crypto).';
+            }
+            
+            continueBtn.textContent = 'Submit';
+            continueBtn.onclick = submitEmail;
+            
+            modal.classList.add('visible');
+            
+            // Focus on email input
+            setTimeout(() => {
+                document.getElementById('userEmail').focus();
+            }, 100);
+        }
+
+        function submitEmail() {
+            const email = document.getElementById('userEmail').value.trim();
+            if (!email || !isValidEmail(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            
+            // Here you would typically send the email to your server
+            // For now, we'll just show a confirmation
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            disclaimerText.innerHTML = 'Thank you. We will contact you at:<br><br><strong>' + email + '</strong><br><br>within 24 hours to coordinate your request.';
+            
+            continueBtn.textContent = 'Close';
+            continueBtn.onclick = closeDisclaimer;
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function handleRaffle() {
+            if (!angelSold) {
+                return; // Do nothing if locked
+            }
+            
+            // Show raffle info panel
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            disclaimerText.textContent = 'This draw opens once the voyage is confirmed.';
+            continueBtn.textContent = 'Continue';
+            continueBtn.disabled = true;
+            continueBtn.classList.add('secondary');
+            
+            modal.classList.add('visible');
+            continueBtn.focus();
+        }
+
+        function unlockRaffle() {
+            angelSold = true;
+            const raffleBtn = document.getElementById('raffleBtn');
+            const raffleNote = document.getElementById('raffleNote');
+            
+            raffleBtn.classList.remove('disabled');
+            raffleBtn.textContent = 'Raffle (€1.80)';
+            raffleNote.style.display = 'none';
+        }
+
         function handleKeyPress(e) {
             const key = e.key.toLowerCase();
             
@@ -283,6 +520,8 @@
                 makeChoice('no');
             } else if (key === 'r' && currentState === 'gameover') {
                 restart();
+            } else if (key === 'escape' && document.getElementById('disclaimerModal').classList.contains('visible')) {
+                closeDisclaimer();
             }
         }
 
