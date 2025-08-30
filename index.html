@@ -327,8 +327,8 @@ GYC is a youth-led climate initiative; the Promoter is responsible for the admin
 
 By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.</div>
             <div class="modal-buttons">
-                <button class="modal-button secondary" onclick="closeDisclaimer()">Close</button>
-                <button class="modal-button" id="continueBtn" onclick="continueAction()">Continue</button>
+                <button class="modal-button secondary" type="button" onclick="closeDisclaimer()">Close</button>
+                <button class="modal-button" id="continueBtn" type="button" onclick="continueAction()">Continue</button>
             </div>
         </div>
     </div>
@@ -407,8 +407,8 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             const disclaimerText = document.getElementById('disclaimerText');
             const continueBtn = document.getElementById('continueBtn');
             
-                         // Reset modal content to original disclaimer
-             disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+            // Reset modal content to original disclaimer
+            disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
 
 Operating in collaboration with Norsk klimanettverk (registered in Norway).
 
@@ -418,10 +418,19 @@ GYC is a youth-led climate initiative; the Promoter is responsible for the admin
 
 By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.`;
             
+            // Reset Continue button to original state
+            continueBtn.style.display = 'inline-block';
             continueBtn.textContent = 'Continue';
             continueBtn.onclick = continueAction;
             continueBtn.classList.remove('secondary');
             continueBtn.disabled = false;
+            
+            // Remove any existing form and its handlers
+            const existingForm = document.getElementById('emailForm');
+            if (existingForm) {
+                existingForm.removeEventListener('submit', handleFormSubmit);
+                existingForm.remove();
+            }
             
             modal.classList.remove('visible');
             currentAction = '';
@@ -447,6 +456,7 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
                 disclaimerText.innerHTML = 'Please provide your email address:<br><br><form id="emailForm" action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;"><input type="email" name="email" id="userEmail" placeholder="your.email@example.com" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-bottom: 1rem;"><input type="hidden" name="action" value="gift"><input type="hidden" name="message" value="Gift Seat Request"><br><br>We will contact you to coordinate gifting a seat and transfer method (wire/crypto).<br><br><button type="submit" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer; margin-right: 1rem;">Submit</button></form>';
             }
             
+            // Hide the Continue button to prevent conflicts
             continueBtn.style.display = 'none';
             
             modal.classList.add('visible');
@@ -456,9 +466,11 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
                 document.getElementById('userEmail').focus();
             }, 100);
             
-            // Add form submit handler
+            // Remove any existing form handlers and add new one
             const form = document.getElementById('emailForm');
             if (form) {
+                // Remove existing listeners to prevent stacking
+                form.removeEventListener('submit', handleFormSubmit);
                 form.addEventListener('submit', handleFormSubmit);
             }
         }
