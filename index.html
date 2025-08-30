@@ -393,12 +393,31 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
         }
 
         function showDisclaimer(action) {
-            currentAction = action;
             const modal = document.getElementById('disclaimerModal');
-            modal.classList.add('visible');
-            
-            // Trap focus in modal
+            const disclaimerText = document.getElementById('disclaimerText');
             const continueBtn = document.getElementById('continueBtn');
+            
+            currentAction = action;
+            
+            // Set up disclaimer text
+            disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
+
+For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
+
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+
+By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.`;
+            
+            // Set up Continue button
+            continueBtn.style.display = 'inline-block';
+            continueBtn.textContent = 'Continue';
+            continueBtn.onclick = continueAction;
+            continueBtn.classList.remove('secondary');
+            continueBtn.disabled = false;
+            
+            modal.classList.add('visible');
             continueBtn.focus();
         }
 
@@ -441,7 +460,6 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             } else if (currentAction === 'gift') {
                 openFormspreeForm('gift');
             }
-            closeDisclaimer();
         }
 
         function openFormspreeForm(action) {
@@ -462,9 +480,18 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             iframe.style.background = 'transparent';
             iframe.style.marginTop = '1rem';
             
-            // Clear modal content and add iframe
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.className = 'modal-button secondary';
+            closeBtn.type = 'button';
+            closeBtn.onclick = closeDisclaimer;
+            closeBtn.style.marginTop = '1rem';
+            
+            // Clear modal content and add iframe and close button
             disclaimerText.innerHTML = '';
             disclaimerText.appendChild(iframe);
+            disclaimerText.appendChild(closeBtn);
             
             modal.classList.add('visible');
         }
