@@ -473,8 +473,28 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             
             currentAction = action;
             
-            // Set up disclaimer text
-            disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+            // Set up disclaimer text based on action
+            if (action === 'invitation') {
+                disclaimerText.innerHTML = `The Promoter
+
+The Global Youth Coalition (GYC) was ready to cross the Atlantic.
+We didn't secure the corporate backing to do it.
+The same companies that flood conferences with slogans wouldn't back the wave.
+
+So we reshaped the story.
+
+From Amsterdam, the sail continues — to Lisbon.
+There, a private gathering of 30 will meet on board.
+Investors, visionaries, and those willing to put real weight behind words.
+
+📩 Contact: theglobalyouthcoalition@gmail.com
+ or takeaction@theglobalyouth.co
+
+⚠️ This is not open to everyone.
+It is not leisure.
+It is for those with the means — and the courage — to shift the tide.`;
+            } else {
+                disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
 
 Operating in collaboration with Norsk klimanettverk (registered in Norway).
 
@@ -483,6 +503,7 @@ For the purposes of this competition, GYC can be contacted at theglobalyouthcoal
 GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
 
 By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.`;
+            }
             
             // Set up Continue button
             continueBtn.style.display = 'inline-block';
@@ -518,10 +539,10 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
             continueBtn.classList.remove('secondary');
             continueBtn.disabled = false;
             
-            // Remove any existing iframe
-            const existingIframe = disclaimerText.querySelector('iframe');
-            if (existingIframe) {
-                existingIframe.remove();
+            // Remove any existing form elements
+            const existingForm = disclaimerText.querySelector('form');
+            if (existingForm) {
+                existingForm.remove();
             }
             
             modal.classList.remove('visible');
