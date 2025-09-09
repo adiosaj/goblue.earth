@@ -329,8 +329,8 @@
     <!-- Loading overlay (sits above everything, then fades away) -->
     <div id="loadingScreen" class="loading-screen" aria-live="polite">
         <div class="loading-wrap">
-            <div class="loading-line-1">Loading your chance</div>
-            <div class="loading-line-2">to weave your name into human history...</div>
+            <div class="loading-line-1">Loading your chance…</div>
+            <div class="loading-line-2">to weave your name into history.</div>
             
             <div class="loading-bar" aria-hidden="true">
                 <div class="loading-fill" id="loadingFill" style="width:0%"></div>
@@ -343,7 +343,8 @@
 
     <div class="container" id="gate">
         <div class="text-content">
-            <div class="main-text">The ocean waits in silence.</div>
+            <div class="main-text">The wave doesn't end.</div>
+            <div class="sub-text">It lands — in Lisbon.</div>
             <div class="sub-text">Will you board?</div>
         </div>
         <div class="button-group">
@@ -354,9 +355,10 @@
 
     <div class="container hidden" id="mirror">
         <div class="text-content">
-            <div class="main-text">Some journeys leave no trace.</div>
-            <div class="sub-text">Others echo forever.</div>
-            <div class="sub-text">Weave your name into history?</div>
+            <div class="main-text">Not another event.</div>
+            <div class="sub-text">An ocean circle. 30 only.</div>
+            <div class="sub-text">Two days. One boat. Lisbon.</div>
+            <div class="sub-text">Claim your place?</div>
         </div>
         <div class="button-group">
             <button class="button" onclick="makeChoice('yes')">YES</button>
@@ -366,30 +368,15 @@
 
     <div class="container hidden" id="throne">
         <div class="text-content">
-            <div class="main-text">Three passengers.</div>
-            <div class="sub-text">One could be YOU.</div>
-            <div class="sub-text">Claim it?</div>
+            <div class="main-text">Legacy is not money.</div>
+            <div class="sub-text">It is motion.</div>
+            <div class="sub-text">Will you move with us?</div>
         </div>
         <div class="button-group">
-            <button class="button" onclick="makeChoice('yes')">YES</button>
-            <button class="button" onclick="makeChoice('no')">NO</button>
+            <button class="button" onclick="requestInvitation()">Request Invitation</button>
         </div>
     </div>
 
-    <div class="container hidden" id="final">
-        <div class="text-content">
-            <div class="final-text">Legacy is not money.</div>
-            <div class="final-text">It is motion.</div>
-            <div class="amount-text">Join the whole journey €45k from Portugal to Brazil,Belém do Grão-Pará(COP30).</div>
-        </div>
-        <div class="final-buttons">
-            <button class="final-button" onclick="showDisclaimer('claim')">Claim Legacy Seat (€18k/Leg)</button>
-            <button class="final-button" onclick="showDisclaimer('gift')">Gift a Seat</button>
-            <button class="final-button disabled" id="raffleBtn" onclick="handleRaffle()">Raffle (€1.80) — Locked</button>
-        </div>
-        <div id="raffleNote" class="raffle-note">Might unlock after the first Legacy Seat is claimed and the sponsor is willing to do so.</div>
-        <div class="subline">Only three.<br>Seven days remain.<br>Join the whole journey €45k from Portugal to Brazil,Belém do Grão-Pará(COP30).</div>
-    </div>
 
     <div class="container hidden" id="gameover">
         <div class="text-content">
@@ -410,7 +397,7 @@ Operating in collaboration with Norsk klimanettverk (registered in Norway).
 
 For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
 
-GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the award of the prize.
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
 
 By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.</div>
             <div class="modal-buttons">
@@ -426,8 +413,7 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
         let currentState = 'gate';
         const gameOverMessages = {
             'gate': 'You stayed behind.<br>Game Over.',
-            'mirror': 'You looked away.<br>Forgotten.',
-            'throne': 'You refused the crown.'
+            'mirror': 'You looked away.<br>Forgotten.'
         };
 
         function showState(state) {
@@ -463,12 +449,8 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
                     currentState = 'throne';
                 }
             } else if (currentState === 'throne') {
-                if (choice === 'no') {
-                    currentState = 'gameover';
-                    document.getElementById('gameover-text').innerHTML = gameOverMessages.throne;
-                } else {
-                    currentState = 'final';
-                }
+                // This should not happen in the new flow since throne only has one button
+                requestInvitation();
             }
 
             showState(currentState);
@@ -477,6 +459,11 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
         function restart() {
             currentState = 'gate';
             showState(currentState);
+        }
+
+        function requestInvitation() {
+            // Show the invitation request form
+            showDisclaimer('invitation');
         }
 
         function showDisclaimer(action) {
@@ -546,6 +533,8 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
                 openFormspreeForm('claim');
             } else if (currentAction === 'gift') {
                 openFormspreeForm('gift');
+            } else if (currentAction === 'invitation') {
+                openFormspreeForm('invitation');
             }
         }
 
@@ -566,7 +555,7 @@ By continuing, you acknowledge the responsibilities and risks inherent to sailin
                     </label>
                     <label style="display: block; margin-bottom: 1rem; color: #fff;">
                         Your message:
-                        <textarea name="message" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-top: 0.5rem; min-height: 100px; resize: vertical;">${action === 'claim' ? 'Legacy Seat Request (€18,000)' : 'Gift Seat Request'}</textarea>
+                        <textarea name="message" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-top: 0.5rem; min-height: 100px; resize: vertical;">${action === 'claim' ? 'Legacy Seat Request (€18,000)' : action === 'gift' ? 'Gift Seat Request' : 'Invitation Request for Lisbon Ocean Circle'}</textarea>
                     </label>
                     <input type="hidden" name="action" value="${action}">
                     <button type="submit" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer; margin-right: 1rem;">Send</button>
