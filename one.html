@@ -159,6 +159,8 @@
         let speedBoost = 1;
         let solidarityPoints = 0;
         let platforms = null;
+        let portugueseWords = ['água', 'energia', 'casa', 'vento', 'sol', 'terra'];
+        let wrongCollectibles = [];
         
         // Level themes with specific mechanics
         const levels = [
@@ -310,7 +312,18 @@
             
             collectibles.children.entries.forEach(collectible => {
                 collectible.x -= gameSpeed * delta / 1000;
+                
+                // Move label with collectible
+                if (collectible.label) {
+                    collectible.label.x = collectible.x;
+                    collectible.label.y = collectible.y - 30;
+                }
+                
                 if (collectible.x < -50) {
+                    // Clean up label
+                    if (collectible.label) {
+                        collectible.label.destroy();
+                    }
                     collectible.destroy();
                 }
             });
@@ -387,27 +400,65 @@
             const powerUpType = Phaser.Utils.Array.GetRandom(level.powerUps);
             const collectible = scene.physics.add.sprite(config.width + 50, Phaser.Math.Between(100, config.height - 100), 'collectible');
             
-            // Theme-specific power-up properties
-            switch(powerUpType) {
-                case 'energyGem':
-                    collectible.setDisplaySize(25, 25);
-                    collectible.setTint(0xFFFF00); // Yellow energy
-                    collectible.powerUpType = 'energy';
-                    break;
-                case 'mysterySeed':
-                    collectible.setDisplaySize(20, 20);
-                    collectible.setTint(0x32CD32); // Green seed
-                    collectible.powerUpType = 'seed';
-                    break;
-                case 'strandedNPC':
-                    collectible.setDisplaySize(30, 30);
-                    collectible.setTint(0xFFD700); // Gold NPC
-                    collectible.powerUpType = 'npc';
-                    break;
+            // 30% chance for wrong collectible (trap)
+            const isWrong = Math.random() < 0.3;
+            
+            if (isWrong) {
+                // Wrong collectible - looks good but is actually bad
+                const wrongType = Phaser.Utils.Array.GetRandom(['chili', 'crab']);
+                collectible.setDisplaySize(25, 25);
+                collectible.powerUpType = 'wrong';
+                collectible.wrongType = wrongType;
+                
+                if (wrongType === 'chili') {
+                    collectible.setTint(0xFF4500); // Red chili
+                } else {
+                    collectible.setTint(0x8B4513); // Brown crab
+                }
+            } else {
+                // Theme-specific power-up properties
+                switch(powerUpType) {
+                    case 'energyGem':
+                        collectible.setDisplaySize(25, 25);
+                        collectible.setTint(0xFFFF00); // Yellow energy
+                        collectible.powerUpType = 'energy';
+                        collectible.portugueseWord = 'energia';
+                        break;
+                    case 'mysterySeed':
+                        collectible.setDisplaySize(20, 20);
+                        collectible.setTint(0x32CD32); // Green seed
+                        collectible.powerUpType = 'seed';
+                        collectible.portugueseWord = 'água';
+                        break;
+                    case 'strandedNPC':
+                        collectible.setDisplaySize(30, 30);
+                        collectible.setTint(0xFFD700); // Gold NPC
+                        collectible.powerUpType = 'npc';
+                        collectible.portugueseWord = 'casa';
+                        break;
+                }
             }
             
             collectible.setVelocityX(-gameSpeed * speedBoost);
             collectibles.add(collectible);
+            
+            // Add Portuguese word label
+            if (!isWrong) {
+                addPortugueseLabel(scene, collectible);
+            }
+        }
+        
+        function addPortugueseLabel(scene, collectible) {
+            const label = scene.add.text(collectible.x, collectible.y - 30, collectible.portugueseWord, {
+                fontSize: '12px',
+                fill: '#ffffff',
+                align: 'center',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: { x: 5, y: 2 }
+            }).setOrigin(0.5);
+            
+            // Make label follow the collectible
+            collectible.label = label;
         }
         
         function flap() {
@@ -432,35 +483,90 @@
             const level = levels[currentLevel];
             let bonusScore = 10;
             
+            // Handle wrong collectibles first
+            if (collectible.powerUpType === 'wrong') {
+                showFailAnimation(collectible.wrongType);
+                lives--;
+                if (lives <= 0) {
+                    gameOver();
+                }
+                collectible.destroy();
+                return;
+            }
+            
             // Handle different power-up types
             switch(collectible.powerUpType) {
                 case 'energy':
                     // Energy gem gives speed boost
                     speedBoost = Math.min(speedBoost + 0.2, 2.0);
                     bonusScore = 15;
-                    showCrewMessage("Engineer: Vamos! Speed boost activated!");
+                    showCrewMessage(`Engineer: ${collectible.portugueseWord}! Speed boost activated!`);
                     break;
                 case 'seed':
                     // Mystery seed creates platform
                     createPlatform(collectible.x, collectible.y);
                     bonusScore = 20;
-                    showCrewMessage("Druid: Água! Nature creates safe passage!");
+                    showCrewMessage(`Druid: ${collectible.portugueseWord}! Nature creates safe passage!`);
                     break;
                 case 'npc':
                     // Stranded NPC joins crew
                     solidarityPoints += 1;
                     crewMembers.push(level.crew);
                     bonusScore = 25;
-                    showCrewMessage("Villagers: Obrigado! We stand together!");
+                    showCrewMessage(`Villagers: ${collectible.portugueseWord}! We stand together!`);
                     break;
             }
             
             score += bonusScore;
+            
+            // Clean up label if it exists
+            if (collectible.label) {
+                collectible.label.destroy();
+            }
+            
             collectible.destroy();
             
             // Glow effect
             player.setTint(0x00FF00);
             setTimeout(() => player.clearTint(), 100);
+        }
+        
+        function showFailAnimation(wrongType) {
+            if (wrongType === 'chili') {
+                // Chili pepper fail animation
+                showCrewMessage("🌶️ TOO SPICY! Your ship overheats!");
+                player.setTint(0xFF4500); // Red tint
+                setTimeout(() => player.clearTint(), 500);
+                
+                // Create chili particles
+                for (let i = 0; i < 5; i++) {
+                    const chili = gameInstance.scene.add.sprite(player.x + Phaser.Math.Between(-20, 20), player.y + Phaser.Math.Between(-20, 20), 'collectible');
+                    chili.setDisplaySize(10, 10);
+                    chili.setTint(0xFF4500);
+                    chili.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-100, 100));
+                    chili.setAngularVelocity(Phaser.Math.Between(-200, 200));
+                    
+                    // Destroy after 1 second
+                    setTimeout(() => chili.destroy(), 1000);
+                }
+            } else if (wrongType === 'crab') {
+                // Crab army fail animation
+                showCrewMessage("🦀 CRAB ARMY! Your ship is under attack!");
+                player.setTint(0x8B4513); // Brown tint
+                setTimeout(() => player.clearTint(), 500);
+                
+                // Create crab army
+                for (let i = 0; i < 8; i++) {
+                    const crab = gameInstance.scene.add.sprite(player.x + Phaser.Math.Between(-30, 30), player.y + Phaser.Math.Between(-30, 30), 'collectible');
+                    crab.setDisplaySize(15, 15);
+                    crab.setTint(0x8B4513);
+                    crab.setVelocity(Phaser.Math.Between(-50, 50), Phaser.Math.Between(-50, 50));
+                    crab.setAngularVelocity(Phaser.Math.Between(-100, 100));
+                    
+                    // Destroy after 2 seconds
+                    setTimeout(() => crab.destroy(), 2000);
+                }
+            }
         }
         
         function createPlatform(x, y) {
@@ -740,4 +846,3 @@
     </script>
 </body>
 </html>
-
