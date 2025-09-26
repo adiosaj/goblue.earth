@@ -267,10 +267,6 @@
             this.input.on('pointerdown', flap, this);
             this.input.keyboard.on('keydown-SPACE', flap, this);
             
-            // Hide main menu when game starts
-            hideAllMenus();
-            showGameHUD();
-            
             // Start the game loop
             gameState = 'playing';
         }
@@ -779,6 +775,9 @@
                 }
                 gameInstance = new Phaser.Game(config);
                 gameState = 'playing';
+                // Hide progress screen and show game HUD
+                hideAllMenus();
+                showGameHUD();
             }, 2000);
         }
 
@@ -833,8 +832,8 @@
                 });
             }
             
-            // Initialize with progress screen
-            showProgressScreen();
+            // Initialize with main menu
+            showMenu();
         });
 
         // Responsive handling
