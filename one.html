@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Blue - Game Canvas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        #gameCanvas {
+            display: block;
+        }
+        
+        /* Custom Tailwind utilities for game UI */
+        .game-ui {
+            position: absolute;
+            z-index: 10;
+        }
+        
+        .menu-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="mx-auto"></canvas>
+    
+    <!-- Game UI Overlays -->
+    <div id="gameUI" class="game-ui">
+        <!-- Main Menu -->
+        <div id="mainMenu" class="fixed inset-0 menu-overlay flex items-center justify-center">
+            <div class="text-center space-y-6">
+                <h1 class="text-4xl md:text-6xl font-light mb-8">Go Blue</h1>
+                <div class="space-y-4">
+                    <button id="startGame" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Start Game
+                    </button>
+                    <button id="showLeaderboard" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Leaderboard
+                    </button>
+                    <button id="showSettings" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game HUD -->
+        <div id="gameHUD" class="fixed top-4 left-4 right-4 hidden">
+            <div class="flex justify-between items-center">
+                <div class="text-lg">
+                    Score: <span id="score">0</span>
+                </div>
+                <div class="text-lg">
+                    Lives: <span id="lives">3</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pause Menu -->
+        <div id="pauseMenu" class="fixed inset-0 menu-overlay flex items-center justify-center hidden">
+            <div class="text-center space-y-6">
+                <h2 class="text-3xl font-light mb-8">Game Paused</h2>
+                <div class="space-y-4">
+                    <button id="resumeGame" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Resume
+                    </button>
+                    <button id="restartGame" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Restart
+                    </button>
+                    <button id="backToMenu" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Main Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Leaderboard -->
+        <div id="leaderboard" class="fixed inset-0 menu-overlay flex items-center justify-center hidden">
+            <div class="w-full max-w-md">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-light mb-4">Leaderboard</h2>
+                    <button id="closeLeaderboard" class="text-sm underline">← Back to Menu</button>
+                </div>
+                <div id="leaderboardList" class="space-y-2">
+                    <!-- Leaderboard entries will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOver" class="fixed inset-0 menu-overlay flex items-center justify-center hidden">
+            <div class="text-center space-y-6">
+                <h2 class="text-3xl font-light mb-4">Game Over</h2>
+                <div class="text-xl mb-8">
+                    Final Score: <span id="finalScore">0</span>
+                </div>
+                <div class="space-y-4">
+                    <button id="playAgain" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Play Again
+                    </button>
+                    <button id="submitScore" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Submit Score
+                    </button>
+                    <button id="backToMenuFromGameOver" class="block w-64 mx-auto px-8 py-4 border border-white text-white hover:bg-white hover:text-black transition-all duration-300">
+                        Main Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Screen -->
+        <div id="progressScreen" class="fixed inset-0 menu-overlay flex items-center justify-center hidden">
+            <div class="text-center space-y-6">
+                <h2 class="text-3xl font-light mb-8">Loading...</h2>
+                <div class="w-64 mx-auto">
+                    <div class="bg-gray-700 rounded-full h-2">
+                        <div id="progressBar" class="bg-white h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <p id="progressText" class="text-sm text-gray-400">Preparing your journey...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phaser.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
+    <script>
+        // Game state management
+        let gameState = 'menu'; // menu, playing, paused, gameOver
+        let gameInstance = null;
+        let score = 0;
+        let lives = 3;
+        
+        // Game objects
+        let player = null;
+        let obstacles = null;
+        let collectibles = null;
+        let background = null;
+        let gameSpeed = 200;
+        let obstacleTimer = 0;
+        let collectibleTimer = 0;
+        let currentLevel = 0;
+        let distance = 0;
+        
+        // New mechanics
+        let crewMembers = [];
+        let unlockedRewards = [];
+        let speedBoost = 1;
+        let solidarityPoints = 0;
+        let platforms = null;
+        let portugueseWords = ['água', 'energia', 'casa', 'vento', 'sol', 'terra'];
+        let wrongCollectibles = [];
+        
+        // Level themes with specific mechanics
+        const levels = [
+            { 
+                name: 'Smokey Isle', 
+                theme: 'CET', 
+                color: '#2D5016', 
+                bgColor: '#1A3009',
+                obstacles: ['oilBarrel', 'fireCannon'],
+                powerUps: ['energyGem'],
+                crew: 'Engineer',
+                reward: 'solarSail',
+                message: 'Clean energy speeds you up, fossils drag you down'
+            },
+            { 
+                name: 'Forest Reef', 
+                theme: 'NBS', 
+                color: '#0F4C3A', 
+                bgColor: '#0A2E24',
+                obstacles: ['mangrove', 'reefMonster'],
+                powerUps: ['mysterySeed'],
+                crew: 'Druid',
+                reward: 'dolphinMount',
+                message: 'Restoring nature creates paths forward'
+            },
+            { 
+                name: 'Storm Coast', 
+                theme: 'LD', 
+                color: '#4A1A1A', 
+                bgColor: '#2D0F0F',
+                obstacles: ['wreckedVillage', 'giantWave'],
+                powerUps: ['strandedNPC'],
+                crew: 'Villagers',
+                reward: 'blueBubbleAura',
+                message: 'Solidarity makes your crew stronger, everyone contributes'
+            }
+        ];
+        
+        // Mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Phaser game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: isMobile ? Math.min(800, window.innerWidth) : 800,
+            height: isMobile ? Math.min(600, window.innerHeight - 100) : 600,
+            canvas: document.getElementById('gameCanvas'),
+            backgroundColor: '#001122', // Deep ocean blue
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 800 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        // Game scene functions
+        function preload() {
+            console.log('Game preload started');
+            
+            // Create simple colored rectangles for game objects
+            this.load.image('player', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+            this.load.image('obstacle', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+            this.load.image('collectible', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+        }
+
+        function create() {
+            console.log('Game create started');
+            
+            // Set up physics world
+            this.physics.world.setBounds(0, 0, config.width, config.height);
+            
+            // Create background
+            createBackground(this);
+            
+            // Create player (avocado ship)
+            createPlayer(this);
+            
+            // Create obstacle group
+            obstacles = this.physics.add.group();
+            
+            // Create collectible group
+            collectibles = this.physics.add.group();
+            
+            // Create platforms group
+            platforms = this.physics.add.group();
+            
+            // Set up collision detection
+            this.physics.add.overlap(player, obstacles, hitObstacle, null, this);
+            this.physics.add.overlap(player, collectibles, collectItem, null, this);
+            this.physics.add.overlap(player, platforms, null, null, this); // Platforms don't cause damage
+            
+            // Set up input
+            this.input.on('pointerdown', flap, this);
+            this.input.keyboard.on('keydown-SPACE', flap, this);
+            
+            // Start the game loop
+            gameState = 'playing';
+        }
+
+        function update(time, delta) {
+            if (gameState !== 'playing') return;
+            
+            // Update distance
+            distance += delta * 0.1;
+            score = Math.floor(distance / 100);
+            
+            // Update HUD
+            updateHUD();
+            
+            // Check level progression
+            checkLevelProgression();
+            
+            // Spawn obstacles
+            obstacleTimer += delta;
+            if (obstacleTimer > 2000) { // Every 2 seconds
+                spawnObstacle(this);
+                obstacleTimer = 0;
+            }
+            
+            // Spawn collectibles
+            collectibleTimer += delta;
+            if (collectibleTimer > 1500) { // Every 1.5 seconds
+                spawnCollectible(this);
+                collectibleTimer = 0;
+            }
+            
+            // Move obstacles and collectibles
+            obstacles.children.entries.forEach(obstacle => {
+                obstacle.x -= gameSpeed * delta / 1000;
+                if (obstacle.x < -50) {
+                    obstacle.destroy();
+                }
+            });
+            
+            collectibles.children.entries.forEach(collectible => {
+                collectible.x -= gameSpeed * delta / 1000;
+                
+                // Move label with collectible
+                if (collectible.label) {
+                    collectible.label.x = collectible.x;
+                    collectible.label.y = collectible.y - 30;
+                }
+                
+                if (collectible.x < -50) {
+                    // Clean up label
+                    if (collectible.label) {
+                        collectible.label.destroy();
+                    }
+                    collectible.destroy();
+                }
+            });
+            
+            // Check if player is out of bounds
+            if (player.y < 0 || player.y > config.height) {
+                gameOver();
+            }
+        }
+
+        // Game Object Creation Functions
+        function createBackground(scene) {
+            // Create animated background based on current level
+            const level = levels[currentLevel];
+            scene.cameras.main.setBackgroundColor(level.bgColor);
+            
+            // Add level name text
+            scene.add.text(config.width - 20, 20, level.name, {
+                fontSize: '16px',
+                fill: level.color,
+                align: 'right'
+            }).setOrigin(1, 0);
+        }
+        
+        function createPlayer(scene) {
+            // Create avocado ship player
+            player = scene.physics.add.sprite(100, config.height / 2, 'player');
+            player.setDisplaySize(40, 30);
+            player.setTint(0x8B4513); // Brown avocado color
+            player.setCollideWorldBounds(true);
+            player.setBounce(0.2);
+            player.setDrag(100);
+        }
+        
+        function spawnObstacle(scene) {
+            const level = levels[currentLevel];
+            const obstacleType = Phaser.Utils.Array.GetRandom(level.obstacles);
+            const obstacle = scene.physics.add.sprite(config.width + 50, Phaser.Math.Between(100, config.height - 100), 'obstacle');
+            
+            // Theme-specific obstacle properties
+            switch(obstacleType) {
+                case 'oilBarrel':
+                    obstacle.setDisplaySize(40, 50);
+                    obstacle.setTint(0x2D2D2D); // Dark oil color
+                    break;
+                case 'fireCannon':
+                    obstacle.setDisplaySize(60, 40);
+                    obstacle.setTint(0xFF4500); // Fire orange
+                    break;
+                case 'mangrove':
+                    obstacle.setDisplaySize(35, 70);
+                    obstacle.setTint(0x8B4513); // Brown mangrove
+                    break;
+                case 'reefMonster':
+                    obstacle.setDisplaySize(50, 60);
+                    obstacle.setTint(0x4B0082); // Purple monster
+                    break;
+                case 'wreckedVillage':
+                    obstacle.setDisplaySize(80, 50);
+                    obstacle.setTint(0x696969); // Gray wreckage
+                    break;
+                case 'giantWave':
+                    obstacle.setDisplaySize(100, 30);
+                    obstacle.setTint(0x4169E1); // Royal blue wave
+                    break;
+            }
+            
+            obstacle.setVelocityX(-gameSpeed * speedBoost);
+            obstacles.add(obstacle);
+        }
+        
+        function spawnCollectible(scene) {
+            const level = levels[currentLevel];
+            const powerUpType = Phaser.Utils.Array.GetRandom(level.powerUps);
+            const collectible = scene.physics.add.sprite(config.width + 50, Phaser.Math.Between(100, config.height - 100), 'collectible');
+            
+            // 30% chance for wrong collectible (trap)
+            const isWrong = Math.random() < 0.3;
+            
+            if (isWrong) {
+                // Wrong collectible - looks good but is actually bad
+                const wrongType = Phaser.Utils.Array.GetRandom(['chili', 'crab']);
+                collectible.setDisplaySize(25, 25);
+                collectible.powerUpType = 'wrong';
+                collectible.wrongType = wrongType;
+                
+                if (wrongType === 'chili') {
+                    collectible.setTint(0xFF4500); // Red chili
+                } else {
+                    collectible.setTint(0x8B4513); // Brown crab
+                }
+            } else {
+                // Theme-specific power-up properties
+                switch(powerUpType) {
+                    case 'energyGem':
+                        collectible.setDisplaySize(25, 25);
+                        collectible.setTint(0xFFFF00); // Yellow energy
+                        collectible.powerUpType = 'energy';
+                        collectible.portugueseWord = 'energia';
+                        break;
+                    case 'mysterySeed':
+                        collectible.setDisplaySize(20, 20);
+                        collectible.setTint(0x32CD32); // Green seed
+                        collectible.powerUpType = 'seed';
+                        collectible.portugueseWord = 'água';
+                        break;
+                    case 'strandedNPC':
+                        collectible.setDisplaySize(30, 30);
+                        collectible.setTint(0xFFD700); // Gold NPC
+                        collectible.powerUpType = 'npc';
+                        collectible.portugueseWord = 'casa';
+                        break;
+                }
+            }
+            
+            collectible.setVelocityX(-gameSpeed * speedBoost);
+            collectibles.add(collectible);
+            
+            // Add Portuguese word label
+            if (!isWrong) {
+                addPortugueseLabel(scene, collectible);
+            }
+        }
+        
+        function addPortugueseLabel(scene, collectible) {
+            const label = scene.add.text(collectible.x, collectible.y - 30, collectible.portugueseWord, {
+                fontSize: '12px',
+                fill: '#ffffff',
+                align: 'center',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: { x: 5, y: 2 }
+            }).setOrigin(0.5);
+            
+            // Make label follow the collectible
+            collectible.label = label;
+        }
+        
+        function flap() {
+            if (gameState !== 'playing') return;
+            player.setVelocityY(-400);
+        }
+        
+        function hitObstacle(player, obstacle) {
+            lives--;
+            obstacle.destroy();
+            
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                // Flash effect
+                player.setTint(0xFF0000);
+                setTimeout(() => player.clearTint(), 200);
+            }
+        }
+        
+        function collectItem(player, collectible) {
+            const level = levels[currentLevel];
+            let bonusScore = 10;
+            
+            // Handle wrong collectibles first
+            if (collectible.powerUpType === 'wrong') {
+                showFailAnimation(collectible.wrongType);
+                lives--;
+                if (lives <= 0) {
+                    gameOver();
+                }
+                collectible.destroy();
+                return;
+            }
+            
+            // Handle different power-up types
+            switch(collectible.powerUpType) {
+                case 'energy':
+                    // Energy gem gives speed boost
+                    speedBoost = Math.min(speedBoost + 0.2, 2.0);
+                    bonusScore = 15;
+                    showCrewMessage(`Engineer: ${collectible.portugueseWord}! Speed boost activated!`);
+                    break;
+                case 'seed':
+                    // Mystery seed creates platform
+                    createPlatform(collectible.x, collectible.y);
+                    bonusScore = 20;
+                    showCrewMessage(`Druid: ${collectible.portugueseWord}! Nature creates safe passage!`);
+                    break;
+                case 'npc':
+                    // Stranded NPC joins crew
+                    solidarityPoints += 1;
+                    crewMembers.push(level.crew);
+                    bonusScore = 25;
+                    showCrewMessage(`Villagers: ${collectible.portugueseWord}! We stand together!`);
+                    break;
+            }
+            
+            score += bonusScore;
+            
+            // Clean up label if it exists
+            if (collectible.label) {
+                collectible.label.destroy();
+            }
+            
+            collectible.destroy();
+            
+            // Glow effect
+            player.setTint(0x00FF00);
+            setTimeout(() => player.clearTint(), 100);
+        }
+        
+        function showFailAnimation(wrongType) {
+            if (wrongType === 'chili') {
+                // Chili pepper fail animation
+                showCrewMessage("🌶️ TOO SPICY! Your ship overheats!");
+                player.setTint(0xFF4500); // Red tint
+                setTimeout(() => player.clearTint(), 500);
+                
+                // Create chili particles
+                for (let i = 0; i < 5; i++) {
+                    const chili = gameInstance.scene.add.sprite(player.x + Phaser.Math.Between(-20, 20), player.y + Phaser.Math.Between(-20, 20), 'collectible');
+                    chili.setDisplaySize(10, 10);
+                    chili.setTint(0xFF4500);
+                    chili.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-100, 100));
+                    chili.setAngularVelocity(Phaser.Math.Between(-200, 200));
+                    
+                    // Destroy after 1 second
+                    setTimeout(() => chili.destroy(), 1000);
+                }
+            } else if (wrongType === 'crab') {
+                // Crab army fail animation
+                showCrewMessage("🦀 CRAB ARMY! Your ship is under attack!");
+                player.setTint(0x8B4513); // Brown tint
+                setTimeout(() => player.clearTint(), 500);
+                
+                // Create crab army
+                for (let i = 0; i < 8; i++) {
+                    const crab = gameInstance.scene.add.sprite(player.x + Phaser.Math.Between(-30, 30), player.y + Phaser.Math.Between(-30, 30), 'collectible');
+                    crab.setDisplaySize(15, 15);
+                    crab.setTint(0x8B4513);
+                    crab.setVelocity(Phaser.Math.Between(-50, 50), Phaser.Math.Between(-50, 50));
+                    crab.setAngularVelocity(Phaser.Math.Between(-100, 100));
+                    
+                    // Destroy after 2 seconds
+                    setTimeout(() => crab.destroy(), 2000);
+                }
+            }
+        }
+        
+        function createPlatform(x, y) {
+            if (!platforms) return;
+            
+            const platform = gameInstance.scene.physics.add.sprite(x, y, 'obstacle');
+            platform.setDisplaySize(60, 20);
+            platform.setTint(0x32CD32); // Green platform
+            platform.setImmovable(true);
+            platforms.add(platform);
+            
+            // Platform disappears after 5 seconds
+            setTimeout(() => {
+                if (platform && platform.active) {
+                    platform.destroy();
+                }
+            }, 5000);
+        }
+        
+        function showCrewMessage(message) {
+            // Create temporary text display
+            const text = gameInstance.scene.add.text(config.width/2, config.height/2, message, {
+                fontSize: '16px',
+                fill: '#ffffff',
+                align: 'center',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: { x: 10, y: 5 }
+            }).setOrigin(0.5);
+            
+            // Fade out after 2 seconds
+            gameInstance.scene.tweens.add({
+                targets: text,
+                alpha: 0,
+                duration: 2000,
+                onComplete: () => text.destroy()
+            });
+        }
+        
+        function checkLevelProgression() {
+            const newLevel = Math.floor(score / 1000);
+            if (newLevel > currentLevel && newLevel < levels.length) {
+                currentLevel = newLevel;
+                // Change background theme
+                if (gameInstance && gameInstance.scene) {
+                    createBackground(gameInstance.scene);
+                }
+            }
+        }
+        
+        function updateHUD() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            
+            // Check for reward unlocks
+            checkRewardUnlocks();
+        }
+        
+        function checkRewardUnlocks() {
+            const level = levels[currentLevel];
+            
+            // Unlock rewards based on score milestones
+            if (score >= 500 && !unlockedRewards.includes(level.reward)) {
+                unlockedRewards.push(level.reward);
+                showRewardUnlock(level.reward, level.message);
+            }
+        }
+        
+        function showRewardUnlock(reward, message) {
+            const rewardText = gameInstance.scene.add.text(config.width/2, config.height/2 - 50, `🎉 UNLOCKED: ${reward.toUpperCase()} 🎉`, {
+                fontSize: '20px',
+                fill: '#FFD700',
+                align: 'center',
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: { x: 15, y: 10 }
+            }).setOrigin(0.5);
+            
+            const messageText = gameInstance.scene.add.text(config.width/2, config.height/2 + 20, message, {
+                fontSize: '14px',
+                fill: '#ffffff',
+                align: 'center',
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: { x: 10, y: 5 }
+            }).setOrigin(0.5);
+            
+            // Fade out after 4 seconds
+            gameInstance.scene.tweens.add({
+                targets: [rewardText, messageText],
+                alpha: 0,
+                duration: 4000,
+                onComplete: () => {
+                    rewardText.destroy();
+                    messageText.destroy();
+                }
+            });
+        }
+        
+        function gameOver() {
+            gameState = 'gameOver';
+            showGameOver();
+        }
+
+        // UI Management Functions
+        function showMenu() {
+            hideAllMenus();
+            document.getElementById('mainMenu').classList.remove('hidden');
+            gameState = 'menu';
+        }
+
+        function hideAllMenus() {
+            const menus = ['mainMenu', 'gameHUD', 'pauseMenu', 'leaderboard', 'gameOver', 'progressScreen'];
+            menus.forEach(menuId => {
+                document.getElementById(menuId).classList.add('hidden');
+            });
+        }
+
+        function showGameHUD() {
+            document.getElementById('gameHUD').classList.remove('hidden');
+        }
+
+        function showPauseMenu() {
+            hideAllMenus();
+            document.getElementById('pauseMenu').classList.remove('hidden');
+            gameState = 'paused';
+        }
+
+        function showGameOver() {
+            hideAllMenus();
+            document.getElementById('gameOver').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = score;
+            gameState = 'gameOver';
+        }
+
+        function showLeaderboard() {
+            hideAllMenus();
+            document.getElementById('leaderboard').classList.remove('hidden');
+            populateLeaderboard();
+        }
+
+        function showProgressScreen() {
+            hideAllMenus();
+            document.getElementById('progressScreen').classList.remove('hidden');
+            animateProgress();
+        }
+
+        function populateLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            const sampleScores = [
+                { name: 'Ocean Master', score: 12500 },
+                { name: 'Wave Rider', score: 9800 },
+                { name: 'Blue Guardian', score: 8700 },
+                { name: 'Tide Walker', score: 7200 },
+                { name: 'Current Chaser', score: 6500 }
+            ];
+            
+            leaderboardList.innerHTML = sampleScores.map((entry, index) => `
+                <div class="flex justify-between items-center p-3 border border-gray-600 rounded">
+                    <span class="text-lg">${index + 1}.</span>
+                    <span class="flex-1 ml-4">${entry.name}</span>
+                    <span class="text-lg font-bold">${entry.score.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+
+        function animateProgress() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const messages = [
+                'Preparing your journey...',
+                'Loading ocean currents...',
+                'Setting sail coordinates...',
+                'Ready to dive in!'
+            ];
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                
+                if (progress <= 30) progressText.textContent = messages[0];
+                else if (progress <= 60) progressText.textContent = messages[1];
+                else if (progress <= 90) progressText.textContent = messages[2];
+                else progressText.textContent = messages[3];
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        showMenu();
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        function startGame() {
+            // Reset game state
+            score = 0;
+            lives = 3;
+            distance = 0;
+            currentLevel = 0;
+            obstacleTimer = 0;
+            collectibleTimer = 0;
+            speedBoost = 1;
+            solidarityPoints = 0;
+            crewMembers = [];
+            unlockedRewards = [];
+            
+            showProgressScreen();
+            setTimeout(() => {
+                if (gameInstance) {
+                    gameInstance.destroy(true);
+                }
+                gameInstance = new Phaser.Game(config);
+                gameState = 'playing';
+                // Hide progress screen and show game HUD
+                hideAllMenus();
+                showGameHUD();
+            }, 2000);
+        }
+
+        function pauseGame() {
+            if (gameInstance && gameState === 'playing') {
+                gameInstance.scene.pause();
+                showPauseMenu();
+            }
+        }
+
+        function resumeGame() {
+            if (gameInstance && gameState === 'paused') {
+                gameInstance.scene.resume();
+                hideAllMenus();
+                showGameHUD();
+                gameState = 'playing';
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Menu buttons
+            document.getElementById('startGame').addEventListener('click', startGame);
+            document.getElementById('showLeaderboard').addEventListener('click', showLeaderboard);
+            document.getElementById('closeLeaderboard').addEventListener('click', showMenu);
+            
+            // Game controls
+            document.getElementById('resumeGame').addEventListener('click', resumeGame);
+            document.getElementById('restartGame').addEventListener('click', startGame);
+            document.getElementById('backToMenu').addEventListener('click', showMenu);
+            document.getElementById('backToMenuFromGameOver').addEventListener('click', showMenu);
+            document.getElementById('playAgain').addEventListener('click', startGame);
+            
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (gameState === 'playing') {
+                        pauseGame();
+                    } else if (gameState === 'paused') {
+                        resumeGame();
+                    }
+                }
+            });
+            
+            // Mobile touch controls
+            if (isMobile) {
+                document.addEventListener('touchstart', (e) => {
+                    if (gameState === 'playing') {
+                        flap();
+                        e.preventDefault();
+                    }
+                });
+            }
+            
+            // Initialize with main menu
+            showMenu();
+        });
+
+        // Responsive handling
+        window.addEventListener('resize', () => {
+            if (gameInstance) {
+                gameInstance.scale.refresh();
+            }
+        });
+    </script>
+</body>
+</html>

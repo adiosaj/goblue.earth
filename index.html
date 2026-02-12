@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Blue - The Gate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .container.visible {
+            opacity: 1;
+        }
+
+        .text-content {
+            margin-bottom: 3rem;
+        }
+
+        .main-text {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .sub-text {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .game-over-text {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 400;
+        }
+
+        .final-text {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 1rem 2rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-height: 44px;
+            min-width: 120px;
+        }
+
+        .button:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .final-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .final-button {
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 1rem 2rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-height: 44px;
+            min-width: 200px;
+        }
+
+        .final-button:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .final-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .amount-text {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-top: 1rem;
+            font-weight: 300;
+        }
+
+        .subline {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2rem;
+            font-weight: 300;
+        }
+
+        .raffle-note {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        .final-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .final-button.disabled:hover {
+            background: transparent;
+            color: #fff;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #000;
+            border: 1px solid #fff;
+            padding: 2rem;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .modal-text {
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            white-space: pre-line;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-button {
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .modal-button.secondary {
+            border-color: #666;
+            color: #666;
+        }
+
+        .modal-button.secondary:hover {
+            background: #666;
+            color: #000;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        .loading-screen.fade-out {
+            opacity: 0;
+        }
+
+        .loading-wrap {
+            text-align: center;
+            color: #fff;
+        }
+
+        .loading-line-1 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-line-2 {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .loading-fill {
+            height: 100%;
+            background: #fff;
+            transition: width 0.1s ease-out;
+        }
+
+        /* About Button */
+        .about-btn {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .about-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .button {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading overlay (sits above everything, then fades away) -->
+    <div id="loadingScreen" class="loading-screen" aria-live="polite">
+        <div class="loading-wrap">
+            <div class="loading-line-1">Loading your chance…</div>
+            <div class="loading-line-2">to weave your name into history.</div>
+            
+            <div class="loading-bar" aria-hidden="true">
+                <div class="loading-fill" id="loadingFill" style="width:0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About button (bottom-left, minimal) -->
+    <a href="about.html" class="about-btn">About</a>
+
+    <div class="container" id="gate">
+        <div class="text-content">
+            <div class="main-text">The wave doesn't end.</div>
+            <div class="sub-text">It lands — in Lisbon.</div>
+            <div class="sub-text">Will you board?</div>
+        </div>
+        <div class="button-group">
+            <button class="button" onclick="makeChoice('yes')">YES</button>
+            <button class="button" onclick="makeChoice('no')">NO</button>
+        </div>
+    </div>
+
+    <div class="container hidden" id="mirror">
+        <div class="text-content">
+            <div class="main-text">Not another event.</div>
+            <div class="sub-text">An ocean circle. 30 only.</div>
+            <div class="sub-text">Two days. One boat. Lisbon.</div>
+            <div class="sub-text">Claim your place?</div>
+        </div>
+        <div class="button-group">
+            <button class="button" onclick="makeChoice('yes')">YES</button>
+            <button class="button" onclick="makeChoice('no')">NO</button>
+        </div>
+    </div>
+
+    <div class="container hidden" id="throne">
+        <div class="text-content">
+            <div class="main-text">Legacy is not money.</div>
+            <div class="sub-text">It is motion.</div>
+            <div class="sub-text">Will you move with us?</div>
+        </div>
+        <div class="button-group">
+            <button class="button" onclick="requestInvitation()">Request Invitation</button>
+        </div>
+    </div>
+
+
+    <div class="container hidden" id="gameover">
+        <div class="text-content">
+            <div class="game-over-text" id="gameover-text">You stayed behind.<br>Game Over.</div>
+        </div>
+        <div class="button-group">
+            <button class="button" onclick="restart()">Restart</button>
+        </div>
+    </div>
+
+    <!-- Disclaimer Modal -->
+    <div class="modal-overlay" id="disclaimerModal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+                         <div class="modal-text" id="disclaimerText">
+The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
+
+For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
+
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+
+By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.</div>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" type="button" onclick="closeDisclaimer()">Close</button>
+                <button class="modal-button" id="continueBtn" type="button" onclick="continueAction()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let angelSold = false; // set true when first legacy seat is sold; unlocks raffle
+        let currentAction = '';
+        let currentState = 'gate';
+        const gameOverMessages = {
+            'gate': 'You stayed behind.<br>Game Over.',
+            'mirror': 'You looked away.<br>Forgotten.'
+        };
+
+        function showState(state) {
+            // Hide all containers
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.add('hidden');
+                container.classList.remove('visible');
+            });
+
+            // Show target container
+            const targetContainer = document.getElementById(state);
+            targetContainer.classList.remove('hidden');
+            
+            // Trigger fade in
+            setTimeout(() => {
+                targetContainer.classList.add('visible');
+            }, 50);
+        }
+
+        function makeChoice(choice) {
+            if (currentState === 'gate') {
+                if (choice === 'no') {
+                    currentState = 'gameover';
+                    document.getElementById('gameover-text').innerHTML = gameOverMessages.gate;
+                } else {
+                    currentState = 'mirror';
+                }
+            } else if (currentState === 'mirror') {
+                if (choice === 'no') {
+                    currentState = 'gameover';
+                    document.getElementById('gameover-text').innerHTML = gameOverMessages.mirror;
+                } else {
+                    currentState = 'throne';
+                }
+            } else if (currentState === 'throne') {
+                // This should not happen in the new flow since throne only has one button
+                requestInvitation();
+            }
+
+            showState(currentState);
+        }
+
+        function restart() {
+            currentState = 'gate';
+            showState(currentState);
+        }
+
+        function requestInvitation() {
+            // Show the invitation request form
+            showDisclaimer('invitation');
+        }
+
+        function showDisclaimer(action) {
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            currentAction = action;
+            
+            // Set up disclaimer text based on action
+            if (action === 'invitation') {
+                disclaimerText.innerHTML = `The Promoter
+
+The Global Youth Coalition (GYC) was ready to cross the Atlantic.
+We didn't secure the corporate backing to do it.
+The same companies that flood conferences with slogans wouldn't back the wave.
+
+So we reshaped the story.
+
+From Amsterdam, the sail continues — to Lisbon.
+There, a private gathering of 30 will meet on board.
+Investors, visionaries, and those willing to put real weight behind words.
+
+📩 Contact: theglobalyouthcoalition@gmail.com
+ or takeaction@theglobalyouth.co
+
+⚠️ This is not open to everyone.
+It is not leisure.
+It is for those with the means — and the courage — to shift the tide.`;
+            } else {
+                disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
+
+For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
+
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+
+By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.`;
+            }
+            
+            // Set up Continue button
+            continueBtn.style.display = 'inline-block';
+            continueBtn.textContent = 'Continue';
+            continueBtn.onclick = continueAction;
+            continueBtn.classList.remove('secondary');
+            continueBtn.disabled = false;
+            
+            modal.classList.add('visible');
+            continueBtn.focus();
+        }
+
+        function closeDisclaimer() {
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            // Reset modal content to original disclaimer
+            disclaimerText.innerHTML = `The Promoter, the Global Youth Coalition (GYC), invites you to sail and put tangible solutions on the table. Stop talking, start protecting.
+
+Operating in collaboration with Norsk klimanettverk (registered in Norway).
+
+For the purposes of this competition, GYC can be contacted at theglobalyouthcoalition@gmail.com or takeaction@theglobalyouth.co.
+
+GYC is a youth-led climate initiative; the Promoter is responsible for the administration of the raffle and the award of the prize.
+
+By continuing, you acknowledge the responsibilities and risks inherent to sailing. This is not a leisure babysitting cruise. This mission is for the planet and an evolution of society.`;
+            
+            // Reset Continue button to original state
+            continueBtn.style.display = 'inline-block';
+            continueBtn.textContent = 'Continue';
+            continueBtn.onclick = continueAction;
+            continueBtn.classList.remove('secondary');
+            continueBtn.disabled = false;
+            
+            // Remove any existing form elements
+            const existingForm = disclaimerText.querySelector('form');
+            if (existingForm) {
+                existingForm.remove();
+            }
+            
+            modal.classList.remove('visible');
+            currentAction = '';
+        }
+
+        function continueAction() {
+            if (currentAction === 'claim') {
+                openFormspreeForm('claim');
+            } else if (currentAction === 'gift') {
+                openFormspreeForm('gift');
+            } else if (currentAction === 'invitation') {
+                openFormspreeForm('invitation');
+            }
+        }
+
+        function openFormspreeForm(action) {
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            // Hide the Continue button
+            continueBtn.style.display = 'none';
+            
+            // Create form with proper styling
+            const formHTML = `
+                <form action="https://formspree.io/f/mrbapwyv" method="POST" style="margin-top: 1rem;">
+                    <label style="display: block; margin-bottom: 1rem; color: #fff;">
+                        Your email:
+                        <input type="email" name="email" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-top: 0.5rem;">
+                    </label>
+                    <label style="display: block; margin-bottom: 1rem; color: #fff;">
+                        Your message:
+                        <textarea name="message" style="width: 100%; padding: 0.5rem; background: transparent; border: 1px solid #fff; color: #fff; font-family: inherit; margin-top: 0.5rem; min-height: 100px; resize: vertical;">${action === 'claim' ? 'Legacy Seat Request (€18,000)' : action === 'gift' ? 'Gift Seat Request' : 'Invitation Request for Lisbon Ocean Circle'}</textarea>
+                    </label>
+                    <input type="hidden" name="action" value="${action}">
+                    <button type="submit" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer; margin-right: 1rem;">Send</button>
+                    <button type="button" onclick="closeDisclaimer()" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 0.5rem 1rem; font-family: inherit; cursor: pointer;">Close</button>
+                </form>
+            `;
+            
+            // Clear modal content and add form
+            disclaimerText.innerHTML = formHTML;
+            
+            modal.classList.add('visible');
+        }
+
+
+
+        function handleRaffle() {
+            if (!angelSold) {
+                return; // Do nothing if locked
+            }
+            
+            // Show raffle info panel
+            const modal = document.getElementById('disclaimerModal');
+            const disclaimerText = document.getElementById('disclaimerText');
+            const continueBtn = document.getElementById('continueBtn');
+            
+            disclaimerText.textContent = 'This draw opens once the voyage is confirmed.';
+            continueBtn.textContent = 'Continue';
+            continueBtn.disabled = true;
+            continueBtn.classList.add('secondary');
+            
+            modal.classList.add('visible');
+            continueBtn.focus();
+        }
+
+        function unlockRaffle() {
+            angelSold = true;
+            const raffleBtn = document.getElementById('raffleBtn');
+            const raffleNote = document.getElementById('raffleNote');
+            
+            raffleBtn.classList.remove('disabled');
+            raffleBtn.textContent = 'Raffle (€1.80)';
+            raffleNote.style.display = 'none';
+        }
+
+        function handleKeyPress(e) {
+            const key = e.key.toLowerCase();
+            
+            if (key === 'y' && (currentState === 'gate' || currentState === 'mirror' || currentState === 'throne')) {
+                makeChoice('yes');
+            } else if (key === 'n' && (currentState === 'gate' || currentState === 'mirror' || currentState === 'throne')) {
+                makeChoice('no');
+            } else if (key === 'r' && currentState === 'gameover') {
+                restart();
+            } else if (key === 'escape' && document.getElementById('disclaimerModal').classList.contains('visible')) {
+                closeDisclaimer();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Start loading animation
+            startLoading();
+        });
+
+        // Event listeners
+        document.addEventListener('keydown', handleKeyPress);
+
+        function startLoading() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loadingFill = document.getElementById('loadingFill');
+            let progress = 0;
+            
+            // Animate loading bar over 9 seconds
+            const loadingInterval = setInterval(() => {
+                progress += 1.11; // 100% / 9 seconds = ~1.11% per frame
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+                    
+                    // Fade out loading screen after bar completes
+                    setTimeout(() => {
+                        loadingScreen.classList.add('fade-out');
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            showState('gate');
+                        }, 1000);
+                    }, 500);
+                }
+                loadingFill.style.width = progress + '%';
+            }, 100); // Update every 100ms for smooth animation
+        }
+    </script>
+</body>
+</html>
