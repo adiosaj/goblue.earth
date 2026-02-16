@@ -93,83 +93,12 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [glowActive, setGlowActive] = useState(false)
   const [showNetwork, setShowNetwork] = useState(false)
+  const capturedElementRef = useRef<HTMLElement | null>(null)
+  const capturedPointerIdRef = useRef<number | null>(null)
   
-  // Global event handlers for reliable dragging
-  useEffect(() => {
-    if (!dragging) return
-
-    const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
-      if (!containerRef.current || !dragging) return
-
-      const clientX = 'touches' in e ? e.touches[0]?.clientX : e.clientX
-      const clientY = 'touches' in e ? e.touches[0]?.clientY : e.clientY
-
-      if (clientX === undefined || clientY === undefined) return
-
-      // Prevent scrolling on touch
-      if ('touches' in e) {
-        e.preventDefault()
-      }
-
-      const rect = containerRef.current.getBoundingClientRect()
-      const newX = ((clientX - rect.left - dragOffset.x) / rect.width) * 100
-      const newY = ((clientY - rect.top - dragOffset.y) / rect.height) * 100
-
-      const constrainedX = Math.max(5, Math.min(95, newX))
-      const constrainedY = Math.max(5, Math.min(95, newY))
-
-      setNodes(prev =>
-        prev.map(node =>
-          node.id === dragging
-            ? { ...node, x: constrainedX, y: constrainedY }
-            : node
-        )
-      )
-    }
-
-    const handleGlobalUp = () => {
-      if (!dragging) return
-
-      setNodes(prev => {
-        const node = prev.find(n => n.id === dragging)
-        if (!node) return prev
-
-        const targetVertex = vertices[node.correctVertex]
-        const distance = getDistance(node.x, node.y, targetVertex.x, targetVertex.y)
-
-        if (distance <= snapRadius) {
-          const wasNotPlaced = !node.placed
-          const updated = prev.map(n =>
-            n.id === dragging
-              ? { ...n, x: targetVertex.x, y: targetVertex.y, placed: true }
-              : n
-          )
-          if (wasNotPlaced) {
-            playNodePlaceSound()
-          }
-          return updated
-        }
-        return prev
-      })
-
-      setDragging(null)
-    }
-
-    // Add global listeners
-    document.addEventListener('mousemove', handleGlobalMove)
-    document.addEventListener('mouseup', handleGlobalUp)
-    document.addEventListener('touchmove', handleGlobalMove, { passive: false })
-    document.addEventListener('touchend', handleGlobalUp)
-    document.addEventListener('touchcancel', handleGlobalUp)
-
-    return () => {
-      document.removeEventListener('mousemove', handleGlobalMove)
-      document.removeEventListener('mouseup', handleGlobalUp)
-      document.removeEventListener('touchmove', handleGlobalMove)
-      document.removeEventListener('touchend', handleGlobalUp)
-      document.removeEventListener('touchcancel', handleGlobalUp)
-    }
-  }, [dragging, dragOffset])
+  // Performance: useRef for live drag position (avoids re-renders during drag)
+  const liveDragPositionRef = useRef<{ nodeId: string; x: number; y: number } | null>(null)
+  const cachedRectRef = useRef<DOMRect | null>(null)
 
   // Vertex positions (percentage-based)
   const vertices = {
@@ -240,13 +169,16 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
     const node = nodes.find(n => n.id === nodeId)
     if (!node || node.placed || dragging) return
 
+    // Prevent all default behaviors
     e.preventDefault()
     e.stopPropagation()
 
+    // Performance: Cache boundingClientRect on pointerDown (don't recalculate on every move)
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
+    cachedRectRef.current = rect
 
-    // Calculate offset from click position to node center
+    // Calculate offset from pointer position to node center
     const nodeCenterX = rect.left + (node.x / 100) * rect.width
     const nodeCenterY = rect.top + (node.y / 100) * rect.height
     
@@ -255,6 +187,126 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
       x: e.clientX - nodeCenterX,
       y: e.clientY - nodeCenterY,
     })
+    
+    // Performance: Initialize live drag position ref
+    liveDragPositionRef.current = { nodeId, x: node.x, y: node.y }
+
+    // Capture pointer for smooth dragging (works on both mouse and touch)
+    const target = e.currentTarget as HTMLElement
+    try {
+      target.setPointerCapture(e.pointerId)
+      capturedElementRef.current = target
+      capturedPointerIdRef.current = e.pointerId
+    } catch (err) {
+      // Fallback for browsers that don't support pointer capture
+      capturedElementRef.current = null
+      capturedPointerIdRef.current = null
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragging || !containerRef.current || !liveDragPositionRef.current) return
+
+    // Only process if this is the captured pointer
+    if (capturedPointerIdRef.current !== null && e.pointerId !== capturedPointerIdRef.current) {
+      return
+    }
+
+    e.preventDefault()
+
+    // Performance: Use cached rect instead of recalculating
+    const rect = cachedRectRef.current || containerRef.current.getBoundingClientRect()
+    if (!cachedRectRef.current) {
+      cachedRectRef.current = rect
+    }
+    
+    // Calculate new position using clientX/clientY (works for both mouse and touch)
+    const newX = ((e.clientX - rect.left - dragOffset.x) / rect.width) * 100
+    const newY = ((e.clientY - rect.top - dragOffset.y) / rect.height) * 100
+
+    // Constrain to container bounds
+    const constrainedX = Math.max(5, Math.min(95, newX))
+    const constrainedY = Math.max(5, Math.min(95, newY))
+
+    // Performance: Update ref directly (no re-render during drag)
+    liveDragPositionRef.current = { nodeId: dragging, x: constrainedX, y: constrainedY }
+    
+    // Performance: Direct DOM manipulation using transform (no React re-render, GPU accelerated)
+    // This avoids setState during drag which would cause full component re-renders
+    const draggingNode = containerRef.current?.querySelector(`[data-node-id="${dragging}"]`) as HTMLElement
+    if (draggingNode && rect) {
+      const translateX = (constrainedX / 100) * rect.width - rect.width / 2
+      const translateY = (constrainedY / 100) * rect.height - rect.height / 2
+      draggingNode.style.transform = `translate(-50%, -50%) translate(${translateX}px, ${translateY}px) scale(1.1)`
+    }
+  }
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!dragging) {
+      // Release capture if we have one
+      releasePointerCapture(e.pointerId)
+      return
+    }
+
+    // Only process if this is the captured pointer
+    if (capturedPointerIdRef.current !== null && e.pointerId !== capturedPointerIdRef.current) {
+      return
+    }
+
+    // Performance: Sync ref position to state (only once on pointerUp)
+    const livePos = liveDragPositionRef.current
+    if (livePos && livePos.nodeId === dragging) {
+      setNodes(prev => {
+        const node = prev.find(n => n.id === dragging)
+        if (!node) return prev
+
+        // Update position from ref
+        const updatedNode = { ...node, x: livePos.x, y: livePos.y }
+        const targetVertex = vertices[updatedNode.correctVertex]
+        const distance = getDistance(updatedNode.x, updatedNode.y, targetVertex.x, targetVertex.y)
+
+        if (distance <= snapRadius) {
+          const wasNotPlaced = !updatedNode.placed
+          const updated = prev.map(n =>
+            n.id === dragging
+              ? { ...n, x: targetVertex.x, y: targetVertex.y, placed: true }
+              : n
+          )
+          if (wasNotPlaced) {
+            playNodePlaceSound()
+          }
+          return updated
+        }
+        
+        // Update position from ref
+        return prev.map(n => n.id === dragging ? updatedNode : n)
+      })
+    }
+
+    setDragging(null)
+    liveDragPositionRef.current = null
+    cachedRectRef.current = null
+    releasePointerCapture(e.pointerId)
+  }
+
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    // Handle pointer cancellation (e.g., user switches apps, pointer lost)
+    setDragging(null)
+    liveDragPositionRef.current = null
+    cachedRectRef.current = null
+    releasePointerCapture(e.pointerId)
+  }
+
+  const releasePointerCapture = (pointerId: number) => {
+    if (capturedElementRef.current && capturedPointerIdRef.current === pointerId) {
+      try {
+        capturedElementRef.current.releasePointerCapture(pointerId)
+      } catch (err) {
+        // Ignore if not supported
+      }
+      capturedElementRef.current = null
+      capturedPointerIdRef.current = null
+    }
   }
 
   const allPlaced = nodes.every(node => node.placed)
@@ -266,7 +318,10 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
           <h3 className="text-2xl font-light text-solar-green-200">
             Structural Calibration
           </h3>
-          <p className="text-solar-green-300/80 text-sm">
+          <p 
+            className="text-solar-green-300/80 text-sm pointer-events-none select-none"
+            style={{ WebkitTouchCallout: 'none' }}
+          >
             Align each node to its designated vertex
           </p>
         </div>
@@ -277,7 +332,10 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
           <h3 className="text-2xl font-light text-solar-green-200">
             Network Integration
           </h3>
-          <p className="text-solar-green-300/80 text-sm">
+          <p 
+            className="text-solar-green-300/80 text-sm pointer-events-none select-none"
+            style={{ WebkitTouchCallout: 'none' }}
+          >
             System integrity achieved. Connecting to network...
           </p>
         </div>
@@ -285,10 +343,15 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
 
       <div
         ref={containerRef}
-        className="relative w-full aspect-square max-w-md mx-auto"
+        className="relative w-full aspect-square max-w-md mx-auto triangle-gate-container"
         style={{ 
           minHeight: '400px',
+          touchAction: 'none',
+          WebkitTapHighlightColor: 'transparent',
         }}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         {/* Larger circle (network) - appears when showNetwork is true */}
         {showNetwork && (
@@ -431,50 +494,90 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
         })}
 
         {/* Draggable nodes */}
-        {nodes.map(node => (
-          <div
-            key={node.id}
-            className={`absolute select-none ${
-              node.placed
-                ? 'cursor-default opacity-100'
-                : 'cursor-grab active:cursor-grabbing opacity-70 hover:opacity-90'
-            } ${dragging === node.id ? 'opacity-90 scale-110 z-10' : ''} ${
-              allPlaced && node.placed ? 'animate-pulse' : ''
-            }`}
-            style={{
-              left: `${node.x}%`,
-              top: `${node.y}%`,
-              transform: showNetwork 
-                ? 'translate(-50%, -50%) scale(0.75)' 
-                : dragging === node.id
-                ? 'translate(-50%, -50%) scale(1.1)'
-                : 'translate(-50%, -50%)',
-              transition: dragging === node.id ? 'none' : showNetwork ? 'transform 2s ease-out' : 'transform 0.3s ease-out',
-              pointerEvents: node.placed ? 'none' : 'auto',
-              touchAction: 'none',
-            }}
-            onPointerDown={(e) => {
-              if (!node.placed) {
-                handlePointerDown(e, node.id)
-              }
-            }}
-          >
+        {nodes.map(node => {
+          // Performance: Use live position from ref during drag, otherwise use state
+          const isDragging = dragging === node.id
+          const livePos = isDragging && liveDragPositionRef.current?.nodeId === node.id
+            ? liveDragPositionRef.current
+            : null
+          const displayX = livePos ? livePos.x : node.x
+          const displayY = livePos ? livePos.y : node.y
+          
+          // Performance: Use transform instead of left/top (GPU accelerated, no layout)
+          // Use cached rect if available, otherwise use container dimensions (no getBoundingClientRect call)
+          const rect = cachedRectRef.current
+          const containerWidth = rect?.width || containerRef.current?.offsetWidth || 400
+          const containerHeight = rect?.height || containerRef.current?.offsetHeight || 400
+          const translateX = (displayX / 100) * containerWidth - containerWidth / 2
+          const translateY = (displayY / 100) * containerHeight - containerHeight / 2
+          
+          return (
+            <div
+              key={node.id}
+              data-node-id={node.id}
+              className={`absolute select-none ${
+                node.placed
+                  ? 'cursor-default opacity-100'
+                  : 'cursor-grab active:cursor-grabbing opacity-70 hover:opacity-90'
+              } ${isDragging ? 'opacity-90 scale-110 z-10' : ''} ${
+                allPlaced && node.placed ? 'animate-pulse' : ''
+              }`}
+              style={{
+                left: '50%',
+                top: '50%',
+                // Performance: Use transform instead of left/top (GPU accelerated, no layout)
+                // During drag, handlePointerMove updates transform directly via DOM for performance
+                // React sets initial/fallback transform here
+                // translate(-50%, -50%) centers the element on its anchor point (left: 50%, top: 50%)
+                transform: showNetwork 
+                  ? `translate(-50%, -50%) translate(${translateX * 0.75}px, ${translateY * 0.75}px) scale(0.75)` 
+                  : isDragging
+                  ? `translate(-50%, -50%) translate(${translateX}px, ${translateY}px) scale(1.1)`
+                  : `translate(-50%, -50%) translate(${translateX}px, ${translateY}px)`,
+                transition: isDragging ? 'none' : showNetwork ? 'transform 2s ease-out' : 'transform 0.3s ease-out',
+                pointerEvents: node.placed ? 'none' : 'auto',
+                touchAction: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                // Ensure minimum 44px touch area (Apple guideline)
+                minWidth: '44px',
+                minHeight: '44px',
+                // Invisible padding to increase hitbox
+                padding: '12px',
+                margin: '-12px',
+              }}
+              draggable={false}
+              onPointerDown={(e) => {
+                if (!node.placed) {
+                  handlePointerDown(e, node.id)
+                }
+              }}
+            >
             <div
               className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-xs md:text-sm font-medium border-2 pointer-events-none ${
                 node.placed
                   ? 'bg-solar-green-900/40 border-solar-gold-400/50 text-solar-gold-300 transition-all'
                   : 'bg-solar-green-900/20 border-solar-green-600 text-solar-green-200 transition-all'
               } ${allPlaced && node.placed ? 'glow-gold' : ''}`}
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              }}
             >
               {node.label}
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {allPlaced && !showNetwork && (
         <div className="text-center space-y-6 animate-fade-in">
-          <p className="text-solar-green-300 text-lg font-light">
+          <p 
+            className="text-solar-green-300 text-lg font-light pointer-events-none select-none"
+            style={{ WebkitTouchCallout: 'none' }}
+          >
             System integrity achieved.
           </p>
         </div>
@@ -482,4 +585,3 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
     </div>
   )
 }
-
