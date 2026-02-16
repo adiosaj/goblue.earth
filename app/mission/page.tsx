@@ -205,14 +205,67 @@ export default function MissionPage() {
       const isTestMode = !supabaseUrl || supabaseUrl.includes('your-project')
       
       if (!isTestMode) {
-        const { error } = await supabase.from('champ_entries').insert([entry])
+        // DIAGNOSTIC: Log the full payload being sent
+        console.log('📤 Supabase insert payload:', JSON.stringify(entry, null, 2))
+        console.log('📤 Payload keys:', Object.keys(entry))
+        console.log('📤 Payload values check:', {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          age: data.age,
+          country: data.country,
+          timezone: data.timezone,
+          email: data.email,
+          identity: data.identity,
+          scenario1: data.scenario1,
+          scenario2: data.scenario2,
+          scenario3: data.scenario3,
+          scenario4: data.scenario4,
+          scenario5: data.scenario5,
+          availabilityHours: data.availabilityHours,
+          ledTeam: data.ledTeam,
+          handleDisagreement: data.handleDisagreement,
+          drainsMost: data.drainsMost,
+          consent: data.consent,
+        })
+
+        const { data: insertData, error } = await supabase.from('champ_entries').insert([entry])
 
         if (error) {
-          console.error('Error saving entry:', error)
-          alert('Error saving your response. Please try again.')
+          // DIAGNOSTIC: Log full Supabase error object
+          console.error('❌ Supabase error object:', error)
+          console.error('❌ Supabase error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          })
+          console.error('❌ Full error JSON:', JSON.stringify(error, null, 2))
+          
+          // DIAGNOSTIC: Compare payload against schema requirements
+          const requiredFields = [
+            'first_name', 'last_name', 'age', 'country', 'timezone', 'email',
+            'identity_choice', 'scenario1', 'scenario2', 'scenario3', 'scenario4', 'scenario5',
+            'availability_hours', 'led_team', 'handle_disagreement', 'drains_most',
+            'builder_score', 'translator_score', 'architect_score', 'archetype_label', 'hidden_tier',
+            'consent'
+          ]
+          
+          const missingFields = requiredFields.filter(field => (entry as any)[field] === undefined || (entry as any)[field] === null)
+          const nullFields = Object.entries(entry)
+            .filter(([key, value]) => requiredFields.includes(key) && (value === null || value === undefined))
+            .map(([key]) => key)
+          
+          console.error('❌ Missing required fields:', missingFields)
+          console.error('❌ Null/undefined required fields:', nullFields)
+          console.error('❌ Entry object check:', entry)
+          
+          alert(`Error saving your response: ${error.message || 'Unknown error'}. Check console for details.`)
           setSubmitting(false)
           return
         }
+        
+        // DIAGNOSTIC: Log successful insert
+        console.log('✅ Insert successful:', insertData)
       } else {
         // Test mode - log to console instead
         console.log('🧪 Test mode - Entry data:', entry)
