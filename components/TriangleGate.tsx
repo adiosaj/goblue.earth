@@ -540,12 +540,13 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
                 WebkitTapHighlightColor: 'transparent',
-                // Ensure minimum 44px touch area (Apple guideline)
-                minWidth: '44px',
-                minHeight: '44px',
-                // Invisible padding to increase hitbox
-                padding: '12px',
-                margin: '-12px',
+                // Explicitly size to match inner circle (use larger desktop size for full coverage)
+                // This ensures the entire visual circle is touchable
+                width: '96px',
+                height: '96px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               draggable={false}
               onPointerDown={(e) => {
