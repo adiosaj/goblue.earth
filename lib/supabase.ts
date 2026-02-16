@@ -3,6 +3,19 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
+// DIAGNOSTIC: Log environment variable status (without exposing full values)
+if (typeof window !== 'undefined') {
+  console.log('🔍 Supabase Environment Check:', {
+    hasUrl: !!supabaseUrl,
+    urlLength: supabaseUrl.length,
+    urlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'MISSING',
+    hasKey: !!supabaseAnonKey,
+    keyLength: supabaseAnonKey.length,
+    keyPreview: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
+    allEnvVars: Object.keys(process.env).filter(key => key.includes('SUPABASE')).join(', '),
+  })
+}
+
 // Create a dummy client for test mode if credentials are missing
 const isTestMode = !supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project')
 

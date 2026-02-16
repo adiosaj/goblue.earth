@@ -202,7 +202,23 @@ export default function MissionPage() {
 
       // Try to save to database (skip if Supabase not configured)
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-      const isTestMode = !supabaseUrl || supabaseUrl.includes('your-project')
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      
+      // DIAGNOSTIC: Log environment variable status
+      console.log('🔍 Mission Page Environment Check:', {
+        hasUrl: !!supabaseUrl,
+        urlLength: supabaseUrl.length,
+        urlPreview: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'MISSING',
+        hasKey: !!supabaseAnonKey,
+        keyLength: supabaseAnonKey.length,
+        keyPreview: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING',
+      })
+      
+      const isTestMode = !supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project')
+      
+      if (isTestMode) {
+        console.warn('⚠️ Running in test mode. Supabase URL:', supabaseUrl || 'MISSING', '| Key:', supabaseAnonKey ? 'PRESENT' : 'MISSING')
+      }
       
       if (!isTestMode) {
         // DIAGNOSTIC: Log the full payload being sent
