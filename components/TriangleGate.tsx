@@ -515,13 +515,13 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
             <div
               key={node.id}
               data-node-id={node.id}
-              className={`absolute select-none ${
+              className={`absolute select-none rounded-full flex items-center justify-center text-xs md:text-sm font-medium border-2 ${
                 node.placed
-                  ? 'cursor-default opacity-100'
-                  : 'cursor-grab active:cursor-grabbing opacity-70 hover:opacity-90'
+                  ? 'cursor-default opacity-100 bg-solar-green-900/40 border-solar-gold-400/50 text-solar-gold-300 transition-all'
+                  : 'cursor-grab active:cursor-grabbing opacity-70 hover:opacity-90 bg-solar-green-900/20 border-solar-green-600 text-solar-green-200 transition-all'
               } ${isDragging ? 'opacity-90 scale-110 z-10' : ''} ${
-                allPlaced && node.placed ? 'animate-pulse' : ''
-              }`}
+                allPlaced && node.placed ? 'animate-pulse glow-gold' : ''
+              } w-20 h-20 md:w-24 md:h-24`}
               style={{
                 left: '50%',
                 top: '50%',
@@ -540,13 +540,6 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
                 WebkitTapHighlightColor: 'transparent',
-                // Explicitly size to match inner circle (use larger desktop size for full coverage)
-                // This ensures the entire visual circle is touchable
-                width: '96px',
-                height: '96px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
               }}
               draggable={false}
               onPointerDown={(e) => {
@@ -555,20 +548,8 @@ export default function TriangleGate({ onComplete }: TriangleGateProps) {
                 }
               }}
             >
-            <div
-              className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-xs md:text-sm font-medium border-2 pointer-events-none ${
-                node.placed
-                  ? 'bg-solar-green-900/40 border-solar-gold-400/50 text-solar-gold-300 transition-all'
-                  : 'bg-solar-green-900/20 border-solar-green-600 text-solar-green-200 transition-all'
-              } ${allPlaced && node.placed ? 'glow-gold' : ''}`}
-              style={{
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-              }}
-            >
               {node.label}
             </div>
-          </div>
           )
         })}
       </div>
