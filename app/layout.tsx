@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import NetworkBackground from '@/components/NetworkBackground'
+import GlobalCountdownGate from '@/components/GlobalCountdownGate'
 
 export const metadata: Metadata = {
   title: process.env.NEXT_PUBLIC_SITE_NAME || 'GYC Champ Signal Mapper',
@@ -17,7 +18,8 @@ export default function RootLayout({
       <body className="min-h-screen bg-solar-dark text-solar-green-50">
         <div className="network-bg" id="network-bg"></div>
         <NetworkBackground />
-        {children}
+        <GlobalCountdownGate />
+        <div className="pt-12">{children}</div>
       </body>
     </html>
   )
