@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 
-const START_AT = new Date('2026-03-04T07:30:00Z').getTime()
-const DURATION_MS = 36 * 60 * 60 * 1000
-const END_AT = new Date('2026-03-05T19:30:00Z').getTime() // START_AT + DURATION_MS
-const END_AT_UTC_STRING = '2026-03-05T19:30:00.000Z'
+// 8:00 Germany (CET = UTC+1) → 07:00 UTC; 48h duration
+const START_AT = new Date('2026-03-06T07:00:00Z').getTime()
+const END_AT = new Date('2026-03-08T07:00:00Z').getTime() // START_AT + 48h
+const END_AT_UTC_STRING = '2026-03-08T07:00:00.000Z'
 
 function formatHMS(ms: number): string {
   if (ms <= 0) return '00:00:00'
