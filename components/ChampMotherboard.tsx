@@ -10,12 +10,21 @@ interface ChampMotherboardProps {
 const TOTAL_SLOTS = 12
 const ACTIVE_COUNT = 4
 const RADIUS_PERCENT = 38
+/** Active nodes at cardinal positions: top (0), right (3), bottom (6), left (9) */
+const DESKTOP_ACTIVE_SLOTS = [0, 3, 6, 9]
 
-function getSlotPosition(index: number) {
+function getSlotPosition(index: number, radiusPercent = RADIUS_PERCENT) {
   const angle = (index / TOTAL_SLOTS) * Math.PI * 2 - Math.PI / 2
-  const x = 50 + RADIUS_PERCENT * Math.cos(angle)
-  const y = 50 + RADIUS_PERCENT * Math.sin(angle)
+  const x = 50 + radiusPercent * Math.cos(angle)
+  const y = 50 + radiusPercent * Math.sin(angle)
   return { x, y }
+}
+
+function getDodecagonPath(radiusPercent: number) {
+  return Array.from({ length: TOTAL_SLOTS }, (_, i) => {
+    const { x, y } = getSlotPosition(i, radiusPercent)
+    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+  }).join(' ') + ' Z'
 }
 
 export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
@@ -26,12 +35,11 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
 
   const activeDocs: ChampDocument[] = CHAMP_DOCUMENTS.slice(0, ACTIVE_COUNT)
 
-  const pathD = activeDocs
-    .map((_doc, i) => {
-      const { x, y } = getSlotPosition(i)
-      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
-    })
-    .join(' ')
+  const pathD = DESKTOP_ACTIVE_SLOTS.map((slotIndex, i) => {
+    const { x, y } = getSlotPosition(slotIndex)
+    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+  }).join(' ')
+  const dodecagonPath = getDodecagonPath(RADIUS_PERCENT + 6)
 
   return (
     <main className="relative min-h-screen px-4 py-10 md:py-14 z-10">
@@ -74,11 +82,9 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
                 </linearGradient>
               </defs>
 
-              {/* Soft chamber ring */}
-              <circle
-                cx="50"
-                cy="50"
-                r={RADIUS_PERCENT + 6}
+              {/* Dodecagon chamber outline */}
+              <path
+                d={dodecagonPath}
                 fill="none"
                 stroke="url(#ring-gradient)"
                 strokeWidth="0.6"
@@ -99,12 +105,13 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
               />
             </svg>
 
-            {/* 12 slots */}
+            {/* 12 slots: active at cardinal positions 0,3,6,9 */}
             <div className="absolute inset-0">
               {Array.from({ length: TOTAL_SLOTS }).map((_, index) => {
                 const { x, y } = getSlotPosition(index)
-                const isActive = index < activeDocs.length
-                const doc = isActive ? activeDocs[index] : null
+                const activeIndex = DESKTOP_ACTIVE_SLOTS.indexOf(index)
+                const isActive = activeIndex >= 0
+                const doc = isActive ? activeDocs[activeIndex] : null
                 return (
                   <div
                     key={index}
@@ -115,7 +122,11 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
                       transform: 'translate(-50%, -50%)',
                     }}
                   >
-                    {isActive && doc ? <ActiveNode index={index} doc={doc} /> : <InactiveNode />}
+                    {isActive && doc ? (
+                      <ActiveNode index={activeIndex} doc={doc} />
+                    ) : (
+                      <InactiveNode />
+                    )}
                   </div>
                 )
               })}
