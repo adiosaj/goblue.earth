@@ -35,7 +35,7 @@ export const CHAMP_DOCUMENTS: ChampDocument[] = [
   },
   {
     title: 'Mission 01',
-    subtitle: 'Champ Photo',
+    subtitle: 'GYC WAVE',
     label: 'Next step',
     url: MISSION_ONE_URL,
   },

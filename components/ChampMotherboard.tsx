@@ -245,11 +245,6 @@ function ActiveNode({
           {doc.subtitle}
         </div>
       )}
-      {isMission && (
-        <div className="mt-1 text-[0.6rem] md:text-[0.65rem] text-solar-gold-400/90 tracking-[0.2em] uppercase">
-          Next step
-        </div>
-      )}
     </div>
   )
 
