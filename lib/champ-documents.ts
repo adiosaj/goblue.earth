@@ -31,7 +31,7 @@ export const CHAMP_DOCUMENTS: ChampDocument[] = [
   {
     title: 'Champ Agreement',
     label: 'Sign',
-    url: 'https://drive.google.com/file/d/1A60LD_3zLDWwfazPB-ofUpGhZnD_Jn3j/view?usp=drive_link',
+    url: 'https://drive.google.com/file/d/1A60LD_3zLDWwfazPB-ofUpGhZnD_JN3j/view?usp=drive_link',
   },
   {
     title: 'Mission 01',
