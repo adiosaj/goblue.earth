@@ -35,7 +35,7 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
 
   return (
     <main className="relative min-h-screen px-4 py-10 md:py-14 z-10">
-      <div className="max-w-5xl mx-auto space-y-10 md:space-y-12 animate-fade-in">
+      <div className="max-w-5xl mx-auto space-y-12 animate-fade-in">
         {/* Central core */}
         <div className="text-center space-y-3">
           <h1 className="text-3xl md:text-4xl font-light tracking-tight text-solar-green-50">
@@ -52,8 +52,8 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
           </p>
         </div>
 
-        {/* Chamber: 12-node ring */}
-        <div className="relative max-w-3xl mx-auto">
+        {/* Desktop: Chamber 12-node ring */}
+        <div className="hidden md:block relative max-w-[640px] mx-auto">
           <div className="relative aspect-square max-w-full mx-auto">
             {/* Ring outline & path */}
             <svg
@@ -123,8 +123,44 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
           </div>
         </div>
 
+        {/* Mobile: Vertical activation spine */}
+        <div className="md:hidden relative w-full max-w-sm mx-auto">
+          {/* Central spine line */}
+          <div
+            className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-px bg-gradient-to-b from-solar-green-500/40 via-solar-green-500/30 to-solar-gold-400/30 opacity-70"
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-stretch gap-0">
+            {activeDocs.map((doc, index) => (
+              <div key={doc.title} className="flex flex-col items-center">
+                {/* Level: two inactive dots + active node + two inactive dots */}
+                <div className="flex items-center justify-between w-full gap-2 py-5">
+                  <div className="flex gap-2 shrink-0">
+                    <InactiveNode />
+                    <InactiveNode />
+                  </div>
+                  <div className="flex-1 min-w-0 flex justify-center px-1">
+                    <ActiveNode index={index} doc={doc} variant="spine" />
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <InactiveNode />
+                    <InactiveNode />
+                  </div>
+                </div>
+                {/* Connector line between nodes */}
+                {index < activeDocs.length - 1 && (
+                  <div
+                    className="w-px h-8 flex-shrink-0 rounded-full bg-solar-green-500/40"
+                    aria-hidden
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Small notes and folder link */}
-        <div className="max-w-xl mx-auto text-center space-y-2 text-xs">
+        <div className="max-w-xl mx-auto text-center space-y-2 text-xs pt-8 md:pt-0">
           <p className="text-solar-green-400/70">
             Access to this layer is limited to confirmed GYC Champs 2026.
           </p>
@@ -160,21 +196,31 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
   )
 }
 
-function ActiveNode({ index, doc }: { index: number; doc: ChampDocument }) {
+function ActiveNode({
+  index,
+  doc,
+  variant = 'ring',
+}: {
+  index: number
+  doc: ChampDocument
+  variant?: 'ring' | 'spine'
+}) {
   const isMission = index === 3
   const isPlaceholder = doc.url === '#'
+  const isSpine = variant === 'spine'
 
   const content = (
     <div
       className={`
-        relative rounded-full border px-4 py-3 md:px-5 md:py-3.5 text-center select-none
+        relative border text-center select-none
         motherboard-card-pulse transition-smooth
+        ${isSpine ? 'w-full rounded-lg px-4 py-3.5' : 'rounded-full px-4 py-3 md:px-5 md:py-3.5'}
         ${
           isMission
             ? 'border-solar-gold-400/70 bg-solar-green-900/20 shadow-[0_0_24px_rgba(249,168,37,0.25)]'
             : 'border-solar-green-500/50 bg-solar-dark/90 shadow-[0_0_18px_rgba(76,175,80,0.18)]'
         }
-        ${isPlaceholder ? 'opacity-80' : 'cursor-pointer hover:scale-[1.03]'}
+        ${isPlaceholder ? 'opacity-80' : 'cursor-pointer hover:scale-[1.03] active:scale-[0.99]'}
       `}
     >
       <div className="text-[0.6rem] md:text-[0.65rem] font-medium tracking-[0.22em] uppercase text-solar-green-300/90">
