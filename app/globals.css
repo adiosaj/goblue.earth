@@ -101,3 +101,17 @@ body {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* Motherboard card subtle pulse */
+@keyframes motherboard-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(76, 175, 80, 0.18);
+  }
+}
+
+.motherboard-card-pulse {
+  animation: motherboard-pulse 3s ease-in-out infinite;
+}
