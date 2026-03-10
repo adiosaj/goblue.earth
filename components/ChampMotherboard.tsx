@@ -1,10 +1,21 @@
 'use client'
 
-import { CHAMP_DOCUMENTS } from '@/lib/champ-documents'
+import { CHAMP_DOCUMENTS, ChampDocument, CHAMP_FOLDER_URL } from '@/lib/champ-documents'
 import { setChampAccessUnlocked } from './ChampAccessGate'
 
 interface ChampMotherboardProps {
   onExit?: () => void
+}
+
+const TOTAL_SLOTS = 12
+const ACTIVE_COUNT = 4
+const RADIUS_PERCENT = 38
+
+function getSlotPosition(index: number) {
+  const angle = (index / TOTAL_SLOTS) * Math.PI * 2 - Math.PI / 2
+  const x = 50 + RADIUS_PERCENT * Math.cos(angle)
+  const y = 50 + RADIUS_PERCENT * Math.sin(angle)
+  return { x, y }
 }
 
 export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
@@ -13,37 +24,38 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
     onExit?.()
   }
 
+  const activeDocs: ChampDocument[] = CHAMP_DOCUMENTS.slice(0, ACTIVE_COUNT)
+
+  const pathD = activeDocs
+    .map((_doc, i) => {
+      const { x, y } = getSlotPosition(i)
+      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+    })
+    .join(' ')
+
   return (
-    <main className="relative min-h-screen px-4 py-8 md:py-12 z-10">
-      <div className="max-w-4xl mx-auto space-y-8 md:space-y-10 animate-fade-in">
-        {/* Header */}
-        <div className="text-center space-y-2">
+    <main className="relative min-h-screen px-4 py-10 md:py-14 z-10">
+      <div className="max-w-5xl mx-auto space-y-10 md:space-y-12 animate-fade-in">
+        {/* Central core */}
+        <div className="text-center space-y-3">
           <h1 className="text-3xl md:text-4xl font-light tracking-tight text-solar-green-50">
             GYC 2026 // Year of the Sky
           </h1>
-          <p className="text-solar-gold-400/90 text-lg md:text-xl">
+          <p className="text-solar-gold-400/90 text-sm md:text-base uppercase tracking-[0.18em]">
+            12 nodes. One rhythm.
+          </p>
+          <p className="text-solar-green-200/90 text-sm md:text-base">
             Read. Align. Sign. Activate.
           </p>
-        </div>
-
-        {/* Instruction block */}
-        <div className="max-w-xl mx-auto text-center space-y-4">
-          <p className="text-solar-green-200/90 text-sm md:text-base leading-relaxed">
-            Read the first two documents carefully. Sign the Champ Agreement.
-            Then move into Mission 01, where your first activation task is waiting.
-          </p>
-          <p className="text-solar-green-400/70 text-xs">
-            Access to this layer is limited to confirmed GYC Champs 2026.
-          </p>
-          <p className="text-solar-green-500/60 text-xs">
-            Do not share this access layer publicly.
+          <p className="text-solar-green-500/70 text-xs">
+            Begin with the highlighted path.
           </p>
         </div>
 
-        {/* Document nodes — motherboard layout */}
-        <div className="relative">
-          {/* Desktop: 2x2 grid with connectors (node order: 0 top-left, 1 top-right, 2 bottom-left, 3 bottom-right) */}
-          <div className="hidden md:block relative min-h-[320px]">
+        {/* Chamber: 12-node ring */}
+        <div className="relative max-w-3xl mx-auto">
+          <div className="relative aspect-square max-w-full mx-auto">
+            {/* Ring outline & path */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
               viewBox="0 0 100 100"
@@ -51,37 +63,89 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
               aria-hidden
             >
               <defs>
-                <linearGradient id="connector-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(76, 175, 80, 0.35)" />
-                  <stop offset="100%" stopColor="rgba(249, 168, 37, 0.35)" />
+                <radialGradient id="ring-gradient" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="rgba(76, 175, 80, 0.0)" />
+                  <stop offset="70%" stopColor="rgba(76, 175, 80, 0.15)" />
+                  <stop offset="100%" stopColor="rgba(249, 168, 37, 0.12)" />
+                </radialGradient>
+                <linearGradient id="path-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(76, 175, 80, 0.6)" />
+                  <stop offset="100%" stopColor="rgba(249, 168, 37, 0.7)" />
                 </linearGradient>
               </defs>
-              {/* Rectangle connecting the four node centers */}
-              <path d="M 25 25 L 75 25 L 75 75 L 25 75 Z" fill="none" stroke="url(#connector-gradient)" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.7" />
+
+              {/* Soft chamber ring */}
+              <circle
+                cx="50"
+                cy="50"
+                r={RADIUS_PERCENT + 6}
+                fill="none"
+                stroke="url(#ring-gradient)"
+                strokeWidth="0.6"
+                strokeDasharray="2 3"
+                opacity="0.8"
+              />
+
+              {/* Highlighted path through active nodes */}
+              <path
+                d={pathD}
+                fill="none"
+                stroke="url(#path-gradient)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="4 3"
+                opacity="0.9"
+              />
             </svg>
-            <div className="grid grid-cols-2 gap-6 md:gap-8 relative">
-              {CHAMP_DOCUMENTS.map((doc, i) => (
-                <NodeCard key={doc.title} doc={doc} index={i} isMissionOne={i === 3} />
-              ))}
+
+            {/* 12 slots */}
+            <div className="absolute inset-0">
+              {Array.from({ length: TOTAL_SLOTS }).map((_, index) => {
+                const { x, y } = getSlotPosition(index)
+                const isActive = index < activeDocs.length
+                const doc = isActive ? activeDocs[index] : null
+                return (
+                  <div
+                    key={index}
+                    className="absolute"
+                    style={{
+                      left: `${x}%`,
+                      top: `${y}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    {isActive && doc ? <ActiveNode index={index} doc={doc} /> : <InactiveNode />}
+                  </div>
+                )
+              })}
             </div>
           </div>
+        </div>
 
-          {/* Mobile: vertical stack with step connectors */}
-          <div className="md:hidden space-y-0">
-            {CHAMP_DOCUMENTS.map((doc, i) => (
-              <div key={doc.title} className="flex flex-col items-center">
-                <NodeCard doc={doc} index={i} isMissionOne={i === 3} />
-                {i < CHAMP_DOCUMENTS.length - 1 && (
-                  <div className="w-px h-6 bg-solar-green-500/40 my-1" aria-hidden />
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Small notes and folder link */}
+        <div className="max-w-xl mx-auto text-center space-y-2 text-xs">
+          <p className="text-solar-green-400/70">
+            Access to this layer is limited to confirmed GYC Champs 2026.
+          </p>
+          <p className="text-solar-green-500/60">
+            Do not share this access layer publicly.
+          </p>
+          <p className="pt-1">
+            <a
+              href={CHAMP_FOLDER_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-solar-green-300/80 hover:text-solar-gold-400/90 transition-smooth underline underline-offset-2 text-[0.7rem]"
+            >
+              View full document folder
+            </a>
+          </p>
         </div>
 
         {/* Exit system */}
         {onExit && (
-          <div className="text-center pt-4">
+          <div className="text-center pt-2">
             <button
               type="button"
               onClick={handleExit}
@@ -96,41 +160,55 @@ export default function ChampMotherboard({ onExit }: ChampMotherboardProps) {
   )
 }
 
-function NodeCard({
-  doc,
-  index,
-  isMissionOne,
-}: {
-  doc: { title: string; label: string; url: string }
-  index: number
-  isMissionOne: boolean
-}) {
+function ActiveNode({ index, doc }: { index: number; doc: ChampDocument }) {
+  const isMission = index === 3
   const isPlaceholder = doc.url === '#'
-  return (
-    <a
-      href={isPlaceholder ? undefined : doc.url}
-      target={isPlaceholder ? undefined : '_blank'}
-      rel={isPlaceholder ? undefined : 'noopener noreferrer'}
+
+  const content = (
+    <div
       className={`
-        group block p-5 md:p-6 rounded-lg border text-left transition-smooth motherboard-card-pulse
-        ${isMissionOne
-          ? 'border-solar-gold-400/50 bg-solar-green-900/10 hover:border-solar-gold-400 hover:shadow-[0_0_24px_rgba(249,168,37,0.15)]'
-          : 'border-solar-green-500/30 bg-solar-dark/80 hover:border-solar-green-400/50 hover:shadow-[0_0_20px_rgba(76,175,80,0.12)]'
+        relative rounded-full border px-4 py-3 md:px-5 md:py-3.5 text-center select-none
+        motherboard-card-pulse transition-smooth
+        ${
+          isMission
+            ? 'border-solar-gold-400/70 bg-solar-green-900/20 shadow-[0_0_24px_rgba(249,168,37,0.25)]'
+            : 'border-solar-green-500/50 bg-solar-dark/90 shadow-[0_0_18px_rgba(76,175,80,0.18)]'
         }
-        ${isPlaceholder ? 'pointer-events-none opacity-90' : 'cursor-pointer'}
+        ${isPlaceholder ? 'opacity-80' : 'cursor-pointer hover:scale-[1.03]'}
       `}
-      onClick={isPlaceholder ? (e) => e.preventDefault() : undefined}
-      aria-label={isPlaceholder ? `${doc.title} (link not yet available)` : `Open ${doc.title}`}
     >
-      <span className="text-xs font-medium text-solar-green-500/90 uppercase tracking-wider">
+      <div className="text-[0.6rem] md:text-[0.65rem] font-medium tracking-[0.22em] uppercase text-solar-green-300/90">
         {doc.label}
-      </span>
-      <h3 className="mt-1 text-lg md:text-xl font-medium text-solar-green-50 group-hover:text-solar-green-100 transition-smooth">
+      </div>
+      <div className="mt-1 text-xs md:text-sm font-medium text-solar-green-50">
         {doc.title}
-      </h3>
-      {isMissionOne && (
-        <span className="inline-block mt-2 text-xs text-solar-gold-400/90">Next step</span>
+      </div>
+      {doc.subtitle && (
+        <div className="text-[0.65rem] md:text-xs text-solar-green-300/80 mt-0.5">
+          {doc.subtitle}
+        </div>
       )}
+      {isMission && (
+        <div className="mt-1 text-[0.6rem] md:text-[0.65rem] text-solar-gold-400/90 tracking-[0.2em] uppercase">
+          Next step
+        </div>
+      )}
+    </div>
+  )
+
+  if (isPlaceholder) {
+    return content
+  }
+
+  return (
+    <a href={doc.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.title}`}>
+      {content}
     </a>
+  )
+}
+
+function InactiveNode() {
+  return (
+    <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border border-solar-green-700/40 bg-solar-green-900/30 shadow-[0_0_10px_rgba(76,175,80,0.16)]" />
   )
 }
