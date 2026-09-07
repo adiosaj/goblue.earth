@@ -33,7 +33,7 @@
     overflow-x: hidden;
   }
 
-  /* ── lane selection screen ── */
+  /* ── landing screen ── */
   .lane-screen{
     position: fixed;
     inset: 0;
@@ -42,21 +42,79 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 28px;
+    padding: 44px 28px 56px;
     background: radial-gradient(120% 90% at 50% 40%, var(--bg-2) 0%, var(--bg) 60%);
     transition: opacity 0.55s ease;
+    overflow-y: auto;
   }
   .lane-screen.gone{
     opacity: 0;
     pointer-events: none;
   }
 
-  .lane-prompt{
+  .landing-name{
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .landing-name .eyebrow{
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .landing-name h1{
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .linkedin-btn{
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    padding: 18px 24px;
+    background: var(--gold);
+    color: #141C2B;
+    text-align: center;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .linkedin-btn:hover{ opacity: 0.88; }
+  .linkedin-btn:active{ opacity: 0.75; }
+
+  .or-row{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 300px;
+    margin: 24px 0;
+  }
+  .or-row::before, .or-row::after{
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--hairline);
+  }
+  .or-row span{
     font-size: 13px;
     color: var(--ink-soft);
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin: 0 0 30px;
+  }
+
+  .lane-prompt{
+    font-size: 15px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+    margin: 0 0 18px;
     text-align: center;
   }
 
@@ -76,7 +134,7 @@
     cursor: pointer;
     color: var(--ink);
     font-family: inherit;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 400;
     letter-spacing: 0.01em;
     transition: border-color 0.2s ease, background 0.2s ease;
@@ -90,15 +148,15 @@
   }
   .lane-btn .sub{
     display: block;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--ink-soft);
     margin-top: 3px;
     font-weight: 300;
   }
 
   .show-all{
-    margin-top: 28px;
-    font-size: 13px;
+    margin-top: 20px;
+    font-size: 14px;
     color: var(--ink-soft);
     background: none;
     border: none;
@@ -138,7 +196,7 @@
     transform: translateY(0);
   }
   .list-header .eyebrow{
-    font-size: 13px;
+    font-size: 14px;
     color: var(--ink-soft);
     letter-spacing: 0.02em;
     margin-bottom: 10px;
@@ -146,13 +204,13 @@
   .list-header h1{
     font-family: 'Shippori Mincho', serif;
     font-weight: 600;
-    font-size: 34px;
+    font-size: 36px;
     line-height: 1.25;
     margin: 0 0 8px;
     letter-spacing: 0.01em;
   }
   .list-header p{
-    font-size: 15px;
+    font-size: 17px;
     color: var(--ink-soft);
     line-height: 1.6;
     margin: 0;
@@ -177,7 +235,7 @@
     width: 100%;
     background: none;
     border: none;
-    padding: 20px 0;
+    padding: 22px 0;
     text-align: left;
     cursor: pointer;
     color: inherit;
@@ -189,7 +247,7 @@
   }
   .card-head:focus-visible{ outline: 1px solid var(--gold); outline-offset: 4px; }
 
-  .enso{ flex: 0 0 auto; width: 34px; height: 34px; }
+  .enso{ flex: 0 0 auto; width: 36px; height: 36px; }
   .enso circle{
     fill: none;
     stroke-width: 2;
@@ -202,11 +260,11 @@
   .card[data-open-item="true"] .enso .fill{ stroke: var(--red); }
 
   .card-title{ flex: 1; min-width: 0; }
-  .card-title .name{ font-family: 'Shippori Mincho', serif; font-size: 18px; font-weight: 600; margin: 0 0 3px; }
-  .card-title .teaser{ font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+  .card-title .name{ font-family: 'Shippori Mincho', serif; font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .card-title .teaser{ font-size: 15px; color: var(--ink-soft); margin: 0; }
 
   .chevron{
-    flex: 0 0 auto; width: 9px; height: 9px;
+    flex: 0 0 auto; width: 10px; height: 10px;
     border-right: 1px solid var(--ink-soft);
     border-bottom: 1px solid var(--ink-soft);
     transform: rotate(-45deg);
@@ -219,15 +277,15 @@
   .card.open .detail-outer{ grid-template-rows: 1fr; }
   .detail-inner{ overflow: hidden; }
 
-  .detail{ padding: 0 0 26px 50px; font-size: 14.5px; line-height: 1.7; opacity: 0.92; }
+  .detail{ padding: 0 0 28px 52px; font-size: 16px; line-height: 1.75; opacity: 0.92; }
   .detail p{ margin: 0 0 14px; }
 
-  .links{ display: flex; flex-wrap: wrap; gap: 10px 18px; }
-  .links a{ font-size: 13.5px; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); padding-bottom: 1px; }
+  .links{ display: flex; flex-wrap: wrap; gap: 10px 20px; }
+  .links a{ font-size: 15px; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); padding-bottom: 1px; }
   .card[data-open-item="true"] .links a{ color: var(--red); border-bottom-color: var(--red-dim); }
   .links a:focus-visible{ outline: 1px solid var(--gold); outline-offset: 3px; }
 
-  /* ── other lanes (dimmed, below matched card) ── */
+  /* ── other lanes ── */
   .other-lanes{
     margin-top: 40px;
     opacity: 0;
@@ -235,7 +293,7 @@
   }
   .other-lanes.visible{ opacity: 1; }
   .other-lanes-label{
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--ink-soft);
@@ -249,18 +307,18 @@
     background: none;
     border: none;
     border-bottom: 1px solid var(--hairline);
-    padding: 12px 0;
+    padding: 14px 0;
     text-align: left;
     cursor: pointer;
     color: var(--ink-soft);
     font-family: inherit;
-    font-size: 13.5px;
+    font-size: 15px;
     transition: color 0.2s ease;
     -webkit-tap-highlight-color: transparent;
   }
   .other-lane-btn:last-child{ border-bottom: none; }
   .other-lane-btn:hover{ color: var(--ink); }
-  .other-lane-btn .arrow{ font-size: 11px; opacity: 0.5; }
+  .other-lane-btn .arrow{ font-size: 12px; opacity: 0.5; }
 
   /* ── footer ── */
   .page-footer{
@@ -271,9 +329,11 @@
     transition: opacity 0.5s ease;
   }
   .page-footer.visible{ opacity: 1; }
-  .page-footer p{ font-size: 13px; color: var(--ink-soft); margin: 0 0 14px; }
-  .contact-row{ display: flex; gap: 22px; }
-  .contact-row a{ font-size: 14px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hairline); padding-bottom: 2px; }
+  .page-footer p{ font-size: 15px; color: var(--ink-soft); margin: 0 0 14px; }
+  .contact-row{ display: flex; flex-wrap: wrap; gap: 12px 22px; }
+  .contact-row a{ font-size: 16px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hairline); padding-bottom: 2px; }
+  .wechat-copy{ font-size: 16px; color: var(--ink); background: none; border: none; border-bottom: 1px solid var(--hairline); padding: 0 0 2px; cursor: pointer; font-family: inherit; transition: color 0.2s ease; }
+  .wechat-copy.copied{ color: var(--gold); border-bottom-color: var(--gold-dim); }
 
   @keyframes rise{
     from{ opacity: 0; transform: translateY(6px); }
@@ -287,9 +347,24 @@
 </head>
 <body>
 
-<!-- ── lane selection ── -->
+<!-- ── landing screen ── -->
 <div class="lane-screen" id="laneScreen">
+
+  <div class="landing-name">
+    <div class="eyebrow">Singapore · September 2026</div>
+    <h1>Agustín Ocaña</h1>
+  </div>
+
+  <a class="linkedin-btn"
+     href="https://www.linkedin.com/in/agust%C3%ADn-oca%C3%B1a/"
+     target="_blank" rel="noopener">
+    Add me on LinkedIn →
+  </a>
+
+  <div class="or-row"><span>or</span></div>
+
   <p class="lane-prompt">What brings you here?</p>
+
   <div class="lanes">
     <button class="lane-btn" onclick="pickLane('youth')">
       Youth &amp; leadership
@@ -308,7 +383,9 @@
       <span class="sub">The Earth Prize</span>
     </button>
   </div>
+
   <button class="show-all" onclick="showAll()">Show me everything</button>
+
 </div>
 
 <!-- ── filtered lane view ── -->
@@ -316,8 +393,7 @@
 
   <div class="list" id="matchedList"></div>
 
-  <!-- personal card, always below -->
-  <div class="list" style="margin-top:0; border-top:none;">
+  <div class="list" style="border-top:none;">
     <div class="card" id="personalCard">
       <button class="card-head" onclick="toggleCard(this.closest('.card'))">
         <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
@@ -330,8 +406,10 @@
       <div class="detail-outer"><div class="detail-inner"><div class="detail">
         <p>I build things designed to run without me — a youth coalition, an AI venture, a nature-finance program. Based in Hong Kong, from Ecuador. Also: Chair, Adjudicating Panel, The Earth Prize.</p>
         <div class="links">
-          <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
-          <a href="mailto:REPLACE@EMAIL.COM">Email</a>
+          <a href="https://www.linkedin.com/in/agust%C3%ADn-oca%C3%B1a/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://wa.me/+593987319134" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="mailto:wocana93@gmail.com">Email</a>
+          <button class="wechat-copy" onclick="copyWechat(this)">WeChat: SmilingPotato9</button>
         </div>
       </div></div></div>
     </div>
@@ -345,8 +423,10 @@
   <div class="page-footer" id="laneFooter">
     <p>Scan again anytime — or just say hi.</p>
     <div class="contact-row">
-      <a href="https://wa.me/REPLACE-NUMBER" target="_blank" rel="noopener">WhatsApp</a>
-      <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://wa.me/+593987319134" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://www.linkedin.com/in/agust%C3%ADn-oca%C3%B1a/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="mailto:wocana93@gmail.com">Email</a>
+      <button class="wechat-copy" onclick="copyWechat(this)">WeChat: SmilingPotato9</button>
     </div>
   </div>
 
@@ -356,7 +436,7 @@
 <div class="content" id="fullContent">
 
   <div class="list-header">
-    <div class="eyebrow">Singapore, 8–12 September 2026</div>
+    <div class="eyebrow">Singapore · September 2026</div>
     <h1>Agustín Ocaña</h1>
     <p>Founder and builder. Youth coalitions, wellbeing AI, and nature finance — currently in motion below.</p>
   </div>
@@ -375,8 +455,10 @@
       <div class="detail-outer"><div class="detail-inner"><div class="detail">
         <p>I build things designed to run without me — a youth coalition, an AI venture, a nature-finance program. Based in Hong Kong, from Ecuador. Also: Chair, Adjudicating Panel, The Earth Prize.</p>
         <div class="links">
-          <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
-          <a href="mailto:REPLACE@EMAIL.COM">Email</a>
+          <a href="https://www.linkedin.com/in/agust%C3%ADn-oca%C3%B1a/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://wa.me/+593987319134" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="mailto:wocana93@gmail.com">Email</a>
+          <button class="wechat-copy" onclick="copyWechat(this)">WeChat: SmilingPotato9</button>
         </div>
       </div></div></div>
     </div>
@@ -392,7 +474,10 @@
       </button>
       <div class="detail-outer"><div class="detail-inner"><div class="detail">
         <p>A youth-led coalition teaching climate governance and systems leadership. This year we built the structure so it runs independently of its founder.</p>
-        <div class="links"><a href="REPLACE-GYC-WEBSITE" target="_blank" rel="noopener">Website</a></div>
+        <div class="links">
+          <a href="https://theglobalyouth.co/" target="_blank" rel="noopener">theglobalyouth.co</a>
+          <a href="https://gycailabs.org/" target="_blank" rel="noopener">GYC AI Labs</a>
+        </div>
       </div></div></div>
     </div>
 
@@ -407,7 +492,7 @@
       </button>
       <div class="detail-outer"><div class="detail-inner"><div class="detail">
         <p>A companionship AI venture backed by Hong Kong Science Park's Ideation Programme. I lead commercial strategy alongside two machine-learning PhDs.</p>
-        <div class="links"><a href="REPLACE-SAPIOMATIC-LINK" target="_blank" rel="noopener">More</a></div>
+        <div class="links"><a href="https://sapiomatic.com/" target="_blank" rel="noopener">sapiomatic.com</a></div>
       </div></div></div>
     </div>
 
@@ -437,7 +522,7 @@
       </button>
       <div class="detail-outer"><div class="detail-inner"><div class="detail">
         <p>I chair the adjudicating panel, judging environmental innovation from young people aged 13 to 19 worldwide. Open to conversations about funding or sponsoring an upcoming cycle.</p>
-        <div class="links"><a href="REPLACE-EARTHPRIZE-LINK" target="_blank" rel="noopener">Earth Prize</a></div>
+        <div class="links"><a href="https://www.theearthprize.org/" target="_blank" rel="noopener">theearthprize.org</a></div>
       </div></div></div>
     </div>
 
@@ -460,11 +545,13 @@
 
   </div>
 
-  <div class="page-footer visible" style="margin-top:44px; padding-top:24px; border-top:1px solid var(--hairline); opacity:0; transition:opacity 0.5s ease 0.8s;">
+  <div class="page-footer" id="fullFooter" style="opacity:0; transition:opacity 0.5s ease;">
     <p>Scan again anytime — or just say hi.</p>
     <div class="contact-row">
-      <a href="https://wa.me/REPLACE-NUMBER" target="_blank" rel="noopener">WhatsApp</a>
-      <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://wa.me/+593987319134" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://www.linkedin.com/in/agust%C3%ADn-oca%C3%B1a/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="mailto:wocana93@gmail.com">Email</a>
+      <button class="wechat-copy" onclick="copyWechat(this)">WeChat: SmilingPotato9</button>
     </div>
   </div>
 
@@ -476,29 +563,25 @@
       name: 'Global Youth Coalition',
       teaser: '40,000+ young people, four years running',
       detail: 'A youth-led coalition teaching climate governance and systems leadership. This year we built the structure so it runs independently of its founder.',
-      links: '<a href="REPLACE-GYC-WEBSITE" target="_blank" rel="noopener">Website</a>',
-      openItem: false,
+      links: '<a href="https://theglobalyouth.co/" target="_blank" rel="noopener">theglobalyouth.co</a> <a href="https://gycailabs.org/" target="_blank" rel="noopener">GYC AI Labs</a>',
     },
     ai: {
       name: 'Sapiomatic',
       teaser: 'AI, built for human wellbeing',
-      detail: 'A companionship AI venture backed by Hong Kong Science Park’s Ideation Programme. I lead commercial strategy alongside two machine-learning PhDs.',
-      links: '<a href="REPLACE-SAPIOMATIC-LINK" target="_blank" rel="noopener">More</a>',
-      openItem: false,
+      detail: "A companionship AI venture backed by Hong Kong Science Park's Ideation Programme. I lead commercial strategy alongside two machine-learning PhDs.",
+      links: '<a href="https://sapiomatic.com/" target="_blank" rel="noopener">sapiomatic.com</a>',
     },
     nature: {
       name: 'Pulso One',
       teaser: '1,000,000 units of nature, one school at a time',
       detail: 'A nature-finance program with a school in Ecuador, converting protected land into fundable, geocoded units through UON.Earth.',
       links: '<a href="https://uon.earth" target="_blank" rel="noopener">UON.Earth</a>',
-      openItem: false,
     },
     prize: {
       name: 'The Earth Prize',
-      teaser: 'The world’s environmental prize for young people',
+      teaser: "The world's environmental prize for young people",
       detail: 'I chair the adjudicating panel, judging environmental innovation from young people aged 13 to 19 worldwide. Open to conversations about funding or sponsoring an upcoming cycle.',
-      links: '<a href="REPLACE-EARTHPRIZE-LINK" target="_blank" rel="noopener">Earth Prize</a>',
-      openItem: false,
+      links: '<a href="https://www.theearthprize.org/" target="_blank" rel="noopener">theearthprize.org</a>',
     },
   };
 
@@ -511,11 +594,23 @@
 
   let laneContentShown = false;
 
+  function copyWechat(btn){
+    navigator.clipboard.writeText('SmilingPotato9').then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  }
+
   function drawEnso(card, delayMs){
     const fill = card.querySelector('.enso .fill');
     if(!fill) return;
     const da = fill.getAttribute('stroke-dasharray');
-    const max = da ? da.split(' ').reduce((a,v) => a + parseFloat(v), 0) : 100;
+    const max = da ? da.split(' ').reduce((a, v) => a + parseFloat(v), 0) : 100;
     fill.style.transition = 'none';
     fill.style.strokeDashoffset = max;
     setTimeout(() => {
@@ -542,9 +637,8 @@
 
   function buildMatchedCard(lane){
     const d = CARDS[lane];
-    const oi = d.openItem ? ' data-open-item="true"' : '';
     return `
-      <div class="card"${oi}>
+      <div class="card">
         <button class="card-head" onclick="toggleCard(this.closest('.card'))">
           <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
           <span class="card-title">
@@ -567,10 +661,8 @@
     const laneFooter  = document.getElementById('laneFooter');
     const personal    = document.getElementById('personalCard');
 
-    // Rebuild matched card (fresh each switch)
     matchedList.innerHTML = buildMatchedCard(lane);
 
-    // Rebuild other lane links
     otherLinks.innerHTML = Object.keys(CARDS)
       .filter(k => k !== lane)
       .map(k => `<button class="other-lane-btn" onclick="pickLane('${k}')">
@@ -589,22 +681,18 @@
 
       requestAnimationFrame(() => requestAnimationFrame(() => {
         laneContent.classList.add('revealed');
-
         matchedCard.classList.add('rise');
         drawEnso(matchedCard, 250);
-
         setTimeout(() => {
           personal.classList.add('rise');
           drawEnso(personal, 120);
         }, 200);
-
         setTimeout(() => {
           otherLanes.classList.add('visible');
           laneFooter.classList.add('visible');
         }, 550);
       }));
     } else {
-      // Switching lanes from other-lane buttons: re-animate matched card only
       otherLanes.classList.remove('visible');
       matchedCard.style.opacity = '0';
       matchedCard.style.transform = 'translateY(6px)';
@@ -623,20 +711,16 @@
 
     requestAnimationFrame(() => requestAnimationFrame(() => {
       fc.classList.add('revealed');
-
       const cards = fc.querySelectorAll('.card');
       cards.forEach((card, i) => {
         card.style.animationDelay = (i * 0.09) + 's';
         card.classList.add('rise');
         drawEnso(card, 220 + i * 120);
       });
-
-      // reveal full-list footer
-      const footer = fc.querySelector('.page-footer');
+      const footer = document.getElementById('fullFooter');
       if(footer){
         setTimeout(() => { footer.style.opacity = '1'; }, 300 + cards.length * 120);
       }
-
       fc.querySelectorAll('.card-head').forEach(head => {
         head.addEventListener('click', () => {
           const list = head.closest('.list');
