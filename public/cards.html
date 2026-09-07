@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Agustín Ocaña</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #141C2B;
+    --bg-2: #101724;
+    --ink: #F3EEE3;
+    --ink-soft: #A9AFC0;
+    --hairline: rgba(243,238,227,0.14);
+    --gold: #C9A86A;
+    --gold-dim: rgba(201,168,106,0.35);
+    --red: #B24A3D;
+    --red-dim: rgba(178,74,61,0.35);
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; height:100%; }
+
+  body{
+    background: radial-gradient(120% 90% at 15% 0%, var(--bg-2) 0%, var(--bg) 55%);
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── lane selection screen ── */
+  .lane-screen{
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    background: radial-gradient(120% 90% at 50% 40%, var(--bg-2) 0%, var(--bg) 60%);
+    transition: opacity 0.55s ease;
+  }
+  .lane-screen.gone{
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lane-prompt{
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 30px;
+    text-align: center;
+  }
+
+  .lanes{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .lane-btn{
+    background: none;
+    border: 1px solid var(--hairline);
+    padding: 15px 18px;
+    text-align: left;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lane-btn:hover,
+  .lane-btn:focus-visible{
+    border-color: rgba(201,168,106,0.5);
+    background: rgba(201,168,106,0.05);
+    outline: none;
+  }
+  .lane-btn .sub{
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    font-weight: 300;
+  }
+
+  .show-all{
+    margin-top: 28px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 0 0 1px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s ease, border-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .show-all:hover{ color: var(--ink); border-bottom-color: var(--hairline); }
+
+  /* ── content shell ── */
+  .content{
+    display: none;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 44px 22px 64px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .content.revealed{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── full-list header ── */
+  .list-header{
+    margin-bottom: 40px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .content.revealed .list-header{
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .list-header .eyebrow{
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+  }
+  .list-header h1{
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 600;
+    font-size: 34px;
+    line-height: 1.25;
+    margin: 0 0 8px;
+    letter-spacing: 0.01em;
+  }
+  .list-header p{
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 34ch;
+  }
+
+  /* ── cards ── */
+  .list{ border-top: 1px solid var(--hairline); }
+  .list.has-open .card:not(.open) .card-head{ opacity: 0.4; }
+
+  .card{
+    border-bottom: 1px solid var(--hairline);
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .card.rise{ animation: rise 0.65s ease forwards; }
+
+  .card-head{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 20px 0;
+    text-align: left;
+    cursor: pointer;
+    color: inherit;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: opacity 0.3s ease;
+  }
+  .card-head:focus-visible{ outline: 1px solid var(--gold); outline-offset: 4px; }
+
+  .enso{ flex: 0 0 auto; width: 34px; height: 34px; }
+  .enso circle{
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    transform: rotate(-100deg);
+    transform-origin: 50% 50%;
+  }
+  .enso .track{ stroke: var(--hairline); }
+  .enso .fill{ stroke: var(--gold); stroke-dasharray: 100; stroke-dashoffset: 100; }
+  .card[data-open-item="true"] .enso .fill{ stroke: var(--red); }
+
+  .card-title{ flex: 1; min-width: 0; }
+  .card-title .name{ font-family: 'Shippori Mincho', serif; font-size: 18px; font-weight: 600; margin: 0 0 3px; }
+  .card-title .teaser{ font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+
+  .chevron{
+    flex: 0 0 auto; width: 9px; height: 9px;
+    border-right: 1px solid var(--ink-soft);
+    border-bottom: 1px solid var(--ink-soft);
+    transform: rotate(-45deg);
+    transition: transform 0.35s ease;
+    margin-right: 2px;
+  }
+  .card.open .chevron{ transform: rotate(45deg); }
+
+  .detail-outer{ display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s cubic-bezier(.4,0,.2,1); }
+  .card.open .detail-outer{ grid-template-rows: 1fr; }
+  .detail-inner{ overflow: hidden; }
+
+  .detail{ padding: 0 0 26px 50px; font-size: 14.5px; line-height: 1.7; opacity: 0.92; }
+  .detail p{ margin: 0 0 14px; }
+
+  .links{ display: flex; flex-wrap: wrap; gap: 10px 18px; }
+  .links a{ font-size: 13.5px; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); padding-bottom: 1px; }
+  .card[data-open-item="true"] .links a{ color: var(--red); border-bottom-color: var(--red-dim); }
+  .links a:focus-visible{ outline: 1px solid var(--gold); outline-offset: 3px; }
+
+  /* ── other lanes (dimmed, below matched card) ── */
+  .other-lanes{
+    margin-top: 40px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .other-lanes.visible{ opacity: 1; }
+  .other-lanes-label{
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .other-lane-btn{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    padding: 12px 0;
+    text-align: left;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 13.5px;
+    transition: color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .other-lane-btn:last-child{ border-bottom: none; }
+  .other-lane-btn:hover{ color: var(--ink); }
+  .other-lane-btn .arrow{ font-size: 11px; opacity: 0.5; }
+
+  /* ── footer ── */
+  .page-footer{
+    margin-top: 44px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .page-footer.visible{ opacity: 1; }
+  .page-footer p{ font-size: 13px; color: var(--ink-soft); margin: 0 0 14px; }
+  .contact-row{ display: flex; gap: 22px; }
+  .contact-row a{ font-size: 14px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hairline); padding-bottom: 2px; }
+
+  @keyframes rise{
+    from{ opacity: 0; transform: translateY(6px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── lane selection ── -->
+<div class="lane-screen" id="laneScreen">
+  <p class="lane-prompt">What brings you here?</p>
+  <div class="lanes">
+    <button class="lane-btn" onclick="pickLane('youth')">
+      Youth &amp; leadership
+      <span class="sub">Global Youth Coalition</span>
+    </button>
+    <button class="lane-btn" onclick="pickLane('ai')">
+      AI &amp; wellbeing
+      <span class="sub">Sapiomatic</span>
+    </button>
+    <button class="lane-btn" onclick="pickLane('nature')">
+      Nature &amp; climate
+      <span class="sub">Pulso One</span>
+    </button>
+    <button class="lane-btn" onclick="pickLane('prize')">
+      Fund youth innovation
+      <span class="sub">The Earth Prize</span>
+    </button>
+  </div>
+  <button class="show-all" onclick="showAll()">Show me everything</button>
+</div>
+
+<!-- ── filtered lane view ── -->
+<div class="content" id="laneContent">
+
+  <div class="list" id="matchedList"></div>
+
+  <!-- personal card, always below -->
+  <div class="list" style="margin-top:0; border-top:none;">
+    <div class="card" id="personalCard">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+        <span class="card-title">
+          <p class="name">Agustín, in one line</p>
+          <p class="teaser">Institutions that outlast their founders</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>I build things designed to run without me — a youth coalition, an AI venture, a nature-finance program. Based in Hong Kong, from Ecuador. Also: Chair, Adjudicating Panel, The Earth Prize.</p>
+        <div class="links">
+          <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="mailto:REPLACE@EMAIL.COM">Email</a>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div class="other-lanes" id="otherLanes">
+    <p class="other-lanes-label">Also on this card</p>
+    <div id="otherLaneLinks"></div>
+  </div>
+
+  <div class="page-footer" id="laneFooter">
+    <p>Scan again anytime — or just say hi.</p>
+    <div class="contact-row">
+      <a href="https://wa.me/REPLACE-NUMBER" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── full list view ── -->
+<div class="content" id="fullContent">
+
+  <div class="list-header">
+    <div class="eyebrow">Singapore, 8–12 September 2026</div>
+    <h1>Agustín Ocaña</h1>
+    <p>Founder and builder. Youth coalitions, wellbeing AI, and nature finance — currently in motion below.</p>
+  </div>
+
+  <div class="list" id="fullList">
+
+    <div class="card">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+        <span class="card-title">
+          <p class="name">Agustín, in one line</p>
+          <p class="teaser">Institutions that outlast their founders</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>I build things designed to run without me — a youth coalition, an AI venture, a nature-finance program. Based in Hong Kong, from Ecuador. Also: Chair, Adjudicating Panel, The Earth Prize.</p>
+        <div class="links">
+          <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="mailto:REPLACE@EMAIL.COM">Email</a>
+        </div>
+      </div></div></div>
+    </div>
+
+    <div class="card">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+        <span class="card-title">
+          <p class="name">Global Youth Coalition</p>
+          <p class="teaser">40,000+ young people, four years running</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>A youth-led coalition teaching climate governance and systems leadership. This year we built the structure so it runs independently of its founder.</p>
+        <div class="links"><a href="REPLACE-GYC-WEBSITE" target="_blank" rel="noopener">Website</a></div>
+      </div></div></div>
+    </div>
+
+    <div class="card">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+        <span class="card-title">
+          <p class="name">Sapiomatic</p>
+          <p class="teaser">AI, built for human wellbeing</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>A companionship AI venture backed by Hong Kong Science Park's Ideation Programme. I lead commercial strategy alongside two machine-learning PhDs.</p>
+        <div class="links"><a href="REPLACE-SAPIOMATIC-LINK" target="_blank" rel="noopener">More</a></div>
+      </div></div></div>
+    </div>
+
+    <div class="card">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+        <span class="card-title">
+          <p class="name">Pulso One</p>
+          <p class="teaser">1,000,000 units of nature, one school at a time</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>A nature-finance program with a school in Ecuador, converting protected land into fundable, geocoded units through UON.Earth.</p>
+        <div class="links"><a href="https://uon.earth" target="_blank" rel="noopener">UON.Earth</a></div>
+      </div></div></div>
+    </div>
+
+    <div class="card">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+        <span class="card-title">
+          <p class="name">The Earth Prize</p>
+          <p class="teaser">The world's environmental prize for young people</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>I chair the adjudicating panel, judging environmental innovation from young people aged 13 to 19 worldwide. Open to conversations about funding or sponsoring an upcoming cycle.</p>
+        <div class="links"><a href="REPLACE-EARTHPRIZE-LINK" target="_blank" rel="noopener">Earth Prize</a></div>
+      </div></div></div>
+    </div>
+
+    <div class="card" data-open-item="true">
+      <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+        <svg class="enso" viewBox="0 0 40 40">
+          <circle class="track" cx="20" cy="20" r="16" stroke-dasharray="78 100"/>
+          <circle class="fill" cx="20" cy="20" r="16" stroke-dasharray="78 100"/>
+        </svg>
+        <span class="card-title">
+          <p class="name">New chapter</p>
+          <p class="teaser">Coming soon</p>
+        </span>
+        <span class="chevron"></span>
+      </button>
+      <div class="detail-outer"><div class="detail-inner"><div class="detail">
+        <p>Something new is taking shape. Ask me in person this week.</p>
+      </div></div></div>
+    </div>
+
+  </div>
+
+  <div class="page-footer visible" style="margin-top:44px; padding-top:24px; border-top:1px solid var(--hairline); opacity:0; transition:opacity 0.5s ease 0.8s;">
+    <p>Scan again anytime — or just say hi.</p>
+    <div class="contact-row">
+      <a href="https://wa.me/REPLACE-NUMBER" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://linkedin.com/in/REPLACE-ME" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const CARDS = {
+    youth: {
+      name: 'Global Youth Coalition',
+      teaser: '40,000+ young people, four years running',
+      detail: 'A youth-led coalition teaching climate governance and systems leadership. This year we built the structure so it runs independently of its founder.',
+      links: '<a href="REPLACE-GYC-WEBSITE" target="_blank" rel="noopener">Website</a>',
+      openItem: false,
+    },
+    ai: {
+      name: 'Sapiomatic',
+      teaser: 'AI, built for human wellbeing',
+      detail: 'A companionship AI venture backed by Hong Kong Science Park’s Ideation Programme. I lead commercial strategy alongside two machine-learning PhDs.',
+      links: '<a href="REPLACE-SAPIOMATIC-LINK" target="_blank" rel="noopener">More</a>',
+      openItem: false,
+    },
+    nature: {
+      name: 'Pulso One',
+      teaser: '1,000,000 units of nature, one school at a time',
+      detail: 'A nature-finance program with a school in Ecuador, converting protected land into fundable, geocoded units through UON.Earth.',
+      links: '<a href="https://uon.earth" target="_blank" rel="noopener">UON.Earth</a>',
+      openItem: false,
+    },
+    prize: {
+      name: 'The Earth Prize',
+      teaser: 'The world’s environmental prize for young people',
+      detail: 'I chair the adjudicating panel, judging environmental innovation from young people aged 13 to 19 worldwide. Open to conversations about funding or sponsoring an upcoming cycle.',
+      links: '<a href="REPLACE-EARTHPRIZE-LINK" target="_blank" rel="noopener">Earth Prize</a>',
+      openItem: false,
+    },
+  };
+
+  const LANE_LABELS = {
+    youth: 'Youth &amp; leadership',
+    ai: 'AI &amp; wellbeing',
+    nature: 'Nature &amp; climate',
+    prize: 'Fund youth innovation',
+  };
+
+  let laneContentShown = false;
+
+  function drawEnso(card, delayMs){
+    const fill = card.querySelector('.enso .fill');
+    if(!fill) return;
+    const da = fill.getAttribute('stroke-dasharray');
+    const max = da ? da.split(' ').reduce((a,v) => a + parseFloat(v), 0) : 100;
+    fill.style.transition = 'none';
+    fill.style.strokeDashoffset = max;
+    setTimeout(() => {
+      fill.style.transition = 'stroke-dashoffset 0.9s cubic-bezier(.4,0,.2,1)';
+      fill.style.strokeDashoffset = 0;
+    }, delayMs || 0);
+  }
+
+  function toggleCard(card){
+    const wasOpen = card.classList.contains('open');
+    const list = card.closest('.list');
+    list.querySelectorAll('.card.open').forEach(c => {
+      c.classList.remove('open');
+      c.querySelector('.card-head').setAttribute('aria-expanded', 'false');
+    });
+    if(!wasOpen){
+      card.classList.add('open');
+      card.querySelector('.card-head').setAttribute('aria-expanded', 'true');
+      list.classList.add('has-open');
+    } else {
+      list.classList.remove('has-open');
+    }
+  }
+
+  function buildMatchedCard(lane){
+    const d = CARDS[lane];
+    const oi = d.openItem ? ' data-open-item="true"' : '';
+    return `
+      <div class="card"${oi}>
+        <button class="card-head" onclick="toggleCard(this.closest('.card'))">
+          <svg class="enso" viewBox="0 0 40 40"><circle class="track" cx="20" cy="20" r="16"/><circle class="fill" cx="20" cy="20" r="16"/></svg>
+          <span class="card-title">
+            <p class="name">${d.name}</p>
+            <p class="teaser">${d.teaser}</p>
+          </span>
+          <span class="chevron"></span>
+        </button>
+        <div class="detail-outer"><div class="detail-inner"><div class="detail">
+          <p>${d.detail}</p>
+          <div class="links">${d.links}</div>
+        </div></div></div>
+      </div>`;
+  }
+
+  function pickLane(lane){
+    const matchedList = document.getElementById('matchedList');
+    const otherLanes  = document.getElementById('otherLanes');
+    const otherLinks  = document.getElementById('otherLaneLinks');
+    const laneFooter  = document.getElementById('laneFooter');
+    const personal    = document.getElementById('personalCard');
+
+    // Rebuild matched card (fresh each switch)
+    matchedList.innerHTML = buildMatchedCard(lane);
+
+    // Rebuild other lane links
+    otherLinks.innerHTML = Object.keys(CARDS)
+      .filter(k => k !== lane)
+      .map(k => `<button class="other-lane-btn" onclick="pickLane('${k}')">
+        <span>${LANE_LABELS[k]} — ${CARDS[k].name}</span>
+        <span class="arrow">→</span>
+      </button>`)
+      .join('');
+
+    const matchedCard = matchedList.querySelector('.card');
+
+    if(!laneContentShown){
+      laneContentShown = true;
+      document.getElementById('laneScreen').classList.add('gone');
+      const laneContent = document.getElementById('laneContent');
+      laneContent.style.display = 'block';
+
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        laneContent.classList.add('revealed');
+
+        matchedCard.classList.add('rise');
+        drawEnso(matchedCard, 250);
+
+        setTimeout(() => {
+          personal.classList.add('rise');
+          drawEnso(personal, 120);
+        }, 200);
+
+        setTimeout(() => {
+          otherLanes.classList.add('visible');
+          laneFooter.classList.add('visible');
+        }, 550);
+      }));
+    } else {
+      // Switching lanes from other-lane buttons: re-animate matched card only
+      otherLanes.classList.remove('visible');
+      matchedCard.style.opacity = '0';
+      matchedCard.style.transform = 'translateY(6px)';
+      requestAnimationFrame(() => {
+        matchedCard.classList.add('rise');
+        drawEnso(matchedCard, 150);
+        setTimeout(() => otherLanes.classList.add('visible'), 350);
+      });
+    }
+  }
+
+  function showAll(){
+    document.getElementById('laneScreen').classList.add('gone');
+    const fc = document.getElementById('fullContent');
+    fc.style.display = 'block';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      fc.classList.add('revealed');
+
+      const cards = fc.querySelectorAll('.card');
+      cards.forEach((card, i) => {
+        card.style.animationDelay = (i * 0.09) + 's';
+        card.classList.add('rise');
+        drawEnso(card, 220 + i * 120);
+      });
+
+      // reveal full-list footer
+      const footer = fc.querySelector('.page-footer');
+      if(footer){
+        setTimeout(() => { footer.style.opacity = '1'; }, 300 + cards.length * 120);
+      }
+
+      fc.querySelectorAll('.card-head').forEach(head => {
+        head.addEventListener('click', () => {
+          const list = head.closest('.list');
+          setTimeout(() => {
+            if(list.querySelector('.card.open')) list.classList.add('has-open');
+            else list.classList.remove('has-open');
+          }, 10);
+        });
+      });
+    }));
+  }
+</script>
+
+</body>
+</html>
