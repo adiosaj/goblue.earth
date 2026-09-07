@@ -335,6 +335,31 @@
   .wechat-copy{ font-size: 16px; color: var(--ink); background: none; border: none; border-bottom: 1px solid var(--hairline); padding: 0 0 2px; cursor: pointer; font-family: inherit; transition: color 0.2s ease; }
   .wechat-copy.copied{ color: var(--gold); border-bottom-color: var(--gold-dim); }
 
+  .back-btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 32px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 15px;
+    transition: color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .back-btn:hover{ color: var(--ink); }
+  .back-btn .back-arrow{
+    width: 18px;
+    height: 18px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
   @keyframes rise{
     from{ opacity: 0; transform: translateY(6px); }
     to{ opacity: 1; transform: translateY(0); }
@@ -390,6 +415,11 @@
 
 <!-- ── filtered lane view ── -->
 <div class="content" id="laneContent">
+
+  <button class="back-btn" onclick="goBack()">
+    <span class="back-arrow"></span>
+    What brings you here?
+  </button>
 
   <div class="list" id="matchedList"></div>
 
@@ -593,6 +623,17 @@
   };
 
   let laneContentShown = false;
+
+  function goBack(){
+    const laneContent = document.getElementById('laneContent');
+    const laneScreen  = document.getElementById('laneScreen');
+    laneContent.classList.remove('revealed');
+    laneScreen.classList.remove('gone');
+    setTimeout(() => {
+      laneContent.style.display = 'none';
+      laneContentShown = false;
+    }, 500);
+  }
 
   function copyWechat(btn){
     navigator.clipboard.writeText('SmilingPotato9').then(() => {
